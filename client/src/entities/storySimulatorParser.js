@@ -46,13 +46,26 @@ function parseTargetString(rawStr, aliasMap) {
 }
 
 export function resolveRoute(routingRules, choiceKey, diceRoll) {
-    if (diceRoll != null) {
-        const match = routingRules.find(r => {
-            if (r.diceOptions === 'NULL') return false;
-            return r.diceOptions.split(',').map(Number).includes(diceRoll);
-        });
+    const diceNums = diceRoll != null ? [diceRoll] : null;
+
+    // Combined choice + dice (e.g. NODE_5_x): match both key and dice range
+    if (choiceKey != null && diceNums != null) {
+        const match = routingRules.find(r =>
+            r.key === choiceKey &&
+            r.diceOptions !== 'NULL' &&
+            r.diceOptions.split(',').map(Number).some(n => diceNums.includes(n))
+        );
         return match?.targetNodeId ?? null;
     }
+    // Pure dice: key is null, match only on dice range
+    if (diceNums != null) {
+        const match = routingRules.find(r =>
+            r.diceOptions !== 'NULL' &&
+            r.diceOptions.split(',').map(Number).some(n => diceNums.includes(n))
+        );
+        return match?.targetNodeId ?? null;
+    }
+    // Pure choice: deterministic target (diceOptions must be NULL)
     if (choiceKey != null) {
         const match = routingRules.find(r => r.key === choiceKey && r.diceOptions === 'NULL');
         return match?.targetNodeId ?? null;

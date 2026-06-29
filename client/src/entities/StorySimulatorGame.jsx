@@ -64,18 +64,35 @@ function PlayerBubble({ text }) {
 function InteractionPanel({ node, onChoice, onDiceNavigate, onAutoAdvance, onRestart }) {
     const [diceRoll, setDiceRoll] = useState(null);
     const [diceTarget, setDiceTarget] = useState(null);
+    const [pendingChoiceKey, setPendingChoiceKey] = useState(null);
+    const [pendingChoiceText, setPendingChoiceText] = useState(null);
 
     useEffect(() => {
         setDiceRoll(null);
         setDiceTarget(null);
+        setPendingChoiceKey(null);
+        setPendingChoiceText(null);
     }, [node.nodeId]);
 
-    const hasDice = node.routingRules.some(r => r.diceOptions !== 'NULL');
-    const hasChoices = node.choices.length > 0 && !hasDice;
+    const diceRules = node.routingRules.filter(r => r.diceOptions !== 'NULL');
+    const hasDice = diceRules.length > 0;
+    // All dice rules are tied to a player choice → choice picks the path, dice picks the variant
+    const isChoiceThenDice = hasDice && node.choices.length > 0 && diceRules.every(r => r.key !== null);
+    const isPureDice = hasDice && !isChoiceThenDice;
+    const isPureChoice = !hasDice && node.choices.length > 0;
     const hasAutoOnly = !hasDice && node.choices.length === 0 && node.routingRules.some(r => r.key === null);
     const isEnd = node.routingRules.length === 0;
 
-    function handleRoll() {
+    function rollDiceForChoice(choiceKey, choiceText) {
+        const roll = Math.floor(Math.random() * 6) + 1;
+        const target = resolveRoute(node.routingRules, choiceKey, roll);
+        setPendingChoiceKey(choiceKey);
+        setPendingChoiceText(choiceText);
+        setDiceRoll(roll);
+        setDiceTarget(target);
+    }
+
+    function handlePureDiceRoll() {
         const roll = Math.floor(Math.random() * 6) + 1;
         const target = resolveRoute(node.routingRules, null, roll);
         setDiceRoll(roll);
@@ -91,7 +108,49 @@ function InteractionPanel({ node, onChoice, onDiceNavigate, onAutoAdvance, onRes
         );
     }
 
-    if (hasChoices) {
+    // Choice + auto-dice: show choices; clicking one auto-rolls and shows result
+    if (isChoiceThenDice) {
+        if (diceRoll == null) {
+            return (
+                <Stack direction="row" flexWrap="wrap" gap={1} justifyContent="flex-end">
+                    {node.choices.map(choice => (
+                        <Button
+                            key={choice.key}
+                            variant="outlined"
+                            color="secondary"
+                            onClick={() => rollDiceForChoice(choice.key, choice.text)}
+                            sx={{ borderRadius: 4 }}
+                        >
+                            {choice.key}. {choice.text}
+                        </Button>
+                    ))}
+                </Stack>
+            );
+        }
+        // After choice + auto-roll: show result
+        return (
+            <Stack spacing={1} alignItems="flex-end">
+                <Typography variant="body2" color="text.secondary">בחרת: {pendingChoiceText}</Typography>
+                <Paper variant="outlined" sx={{ p: 2, textAlign: 'center', minWidth: 160 }}>
+                    <Typography variant="h3">{DICE_FACE[diceRoll]}</Typography>
+                    <Typography variant="body2">גלגול קובייה: {diceRoll}</Typography>
+                    {!diceTarget && <Typography color="error" variant="caption">לא נמצא יעד לשילוב זה</Typography>}
+                </Paper>
+                <Stack direction="row" spacing={1}>
+                    <Button size="small" onClick={() => { setDiceRoll(null); setDiceTarget(null); }}>חזור לבחירות</Button>
+                    {diceTarget && (
+                        <Button variant="contained" startIcon={<PlayArrowIcon />}
+                            onClick={() => onDiceNavigate(diceRoll, diceTarget, pendingChoiceText)} sx={{ borderRadius: 4 }}>
+                            המשך
+                        </Button>
+                    )}
+                </Stack>
+            </Stack>
+        );
+    }
+
+    // Pure choice: deterministic routing
+    if (isPureChoice) {
         return (
             <Stack direction="row" flexWrap="wrap" gap={1} justifyContent="flex-end">
                 {node.choices.map(choice => (
@@ -109,11 +168,12 @@ function InteractionPanel({ node, onChoice, onDiceNavigate, onAutoAdvance, onRes
         );
     }
 
-    if (hasDice) {
+    // Pure dice: no choice, just roll
+    if (isPureDice) {
         return (
             <Stack spacing={1} alignItems="flex-end">
                 {diceRoll == null ? (
-                    <Button variant="contained" color="secondary" startIcon={<CasinoIcon />} onClick={handleRoll} sx={{ borderRadius: 4 }}>
+                    <Button variant="contained" color="secondary" startIcon={<CasinoIcon />} onClick={handlePureDiceRoll} sx={{ borderRadius: 4 }}>
                         גלגל קובייה
                     </Button>
                 ) : (
@@ -126,7 +186,7 @@ function InteractionPanel({ node, onChoice, onDiceNavigate, onAutoAdvance, onRes
                         <Stack direction="row" spacing={1}>
                             <Button size="small" onClick={() => { setDiceRoll(null); setDiceTarget(null); }}>הטל שוב</Button>
                             {diceTarget && (
-                                <Button variant="contained" startIcon={<PlayArrowIcon />} onClick={() => onDiceNavigate(diceRoll, diceTarget)} sx={{ borderRadius: 4 }}>
+                                <Button variant="contained" startIcon={<PlayArrowIcon />} onClick={() => onDiceNavigate(diceRoll, diceTarget, null)} sx={{ borderRadius: 4 }}>
                                     המשך
                                 </Button>
                             )}
@@ -202,8 +262,11 @@ export default function StorySimulatorGame({ nodes, segments, startNodeId, onRes
         if (target) navigate(target, `בחרתי: ${choiceText}`);
     }
 
-    function handleDiceNavigate(roll, target) {
-        navigate(target, `הטלתי ${DICE_FACE[roll]} (${roll})`);
+    function handleDiceNavigate(roll, target, choiceText) {
+        const label = choiceText
+            ? `${choiceText} — גלגול ${DICE_FACE[roll]} (${roll})`
+            : `הטלתי ${DICE_FACE[roll]} (${roll})`;
+        navigate(target, label);
     }
 
     function handleAutoAdvance() {
