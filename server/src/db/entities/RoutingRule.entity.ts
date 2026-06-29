@@ -5,18 +5,28 @@ import { IsOptional } from 'class-validator';
 import { MaxLength } from '@shared/utils/validation/class-validator-he';
 import { StringType } from '@shared/utils/entity/class-transformer';
 import { IHasUserId } from '@shared/base-entity/interface';
+import { Game } from './Game.entity';
 import { GameNode } from './GameNode.entity';
 import { Choice } from './Choice.entity';
 
 @Entity('routing_rules')
 @Index('routing_rules_user_id_idx', ['userId'], {})
 @Index('routing_rules_source_node_id_idx', ['sourceNodeId'], {})
+@Index('routing_rules_game_id_idx', ['gameId'], {})
 export class RoutingRule implements IHasUserId {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column('int', { name: 'user_id' })
   userId: number;
+
+  @IsOptional({ always: true })
+  @Column('int', { nullable: true })
+  gameId: number;
+
+  @ManyToOne(() => Game, { nullable: true })
+  @JoinColumn({ name: 'gameId' })
+  game: Game;
 
   @Column('int')
   sourceNodeId: number;

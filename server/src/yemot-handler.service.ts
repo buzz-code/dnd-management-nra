@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { BaseYemotHandlerService } from '../shared/utils/yemot/v2/yemot-router.service';
+import { Game } from './db/entities/Game.entity';
 import { GameNode } from './db/entities/GameNode.entity';
 
 @Injectable()
@@ -8,9 +9,16 @@ export class YemotHandlerService extends BaseYemotHandlerService {
     await this.getUserByDidPhone();
     if (!this.user) return;
 
-    this.logger.log(`DnD game started. Call: ${this.call.callId}, User: ${this.user.id}`);
+    const activeGame = await this.dataSource.getRepository(Game)
+      .findOne({ where: { userId: this.user.id, isActive: true } });
+    if (!activeGame) {
+      await this.hangupWithMessageByKey('DND.NO_ACTIVE_GAME');
+      return;
+    }
 
-    let currentNode = await this.loadNode({ nodeType: 'start' });
+    this.logger.log(`DnD game started. Call: ${this.call.callId}, User: ${this.user.id}, Game: ${activeGame.id}`);
+
+    let currentNode = await this.loadNode({ nodeType: 'start' }, activeGame.id);
 
     if (!currentNode) {
       await this.hangupWithMessageByKey('DND.GAME_NOT_FOUND');
@@ -24,7 +32,7 @@ export class YemotHandlerService extends BaseYemotHandlerService {
           await this.hangupWithMessageByKey('DND.BROKEN_TREE');
           return;
         }
-        currentNode = await this.loadNode({ id: next.id });
+        currentNode = await this.loadNode({ id: next.id }, activeGame.id);
         continue;
       }
 
@@ -48,7 +56,7 @@ export class YemotHandlerService extends BaseYemotHandlerService {
           await this.hangupWithMessageByKey('DND.BROKEN_TREE');
           return;
         }
-        currentNode = await this.loadNode({ id: next.id });
+        currentNode = await this.loadNode({ id: next.id }, activeGame.id);
 
       } else {
         if (currentNode.nodeType === 'end') {
@@ -63,7 +71,7 @@ export class YemotHandlerService extends BaseYemotHandlerService {
           await this.hangupWithMessageByKey('DND.BROKEN_TREE');
           return;
         }
-        currentNode = await this.loadNode({ id: next.id });
+        currentNode = await this.loadNode({ id: next.id }, activeGame.id);
       }
     }
 
@@ -92,9 +100,9 @@ export class YemotHandlerService extends BaseYemotHandlerService {
     return rules[0].targetNode;
   }
 
-  private loadNode(where: { id?: number; nodeType?: string }): Promise<GameNode | null> {
+  private loadNode(where: { id?: number; nodeType?: string }, gameId: number): Promise<GameNode | null> {
     return this.dataSource.getRepository(GameNode).findOne({
-      where: { ...where, userId: this.user.id },
+      where: { ...where, userId: this.user.id, gameId },
       relations: [
         'segment',
         'choices',

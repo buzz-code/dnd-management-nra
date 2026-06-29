@@ -8,6 +8,7 @@ import { AppModule } from 'src/app.module';
 import { User } from '@shared/entities/User.entity';
 import { Text } from '@shared/entities/Text.entity';
 import { YemotCall } from '@shared/entities/YemotCall.entity';
+import { Game } from 'src/db/entities/Game.entity';
 import { GameNode } from 'src/db/entities/GameNode.entity';
 import { Segment } from 'src/db/entities/Segment.entity';
 import { Choice } from 'src/db/entities/Choice.entity';
@@ -53,6 +54,7 @@ describe('YemotHandlerService (e2e)', () => {
     await ds.getRepository(Choice).delete({});
     await ds.getRepository(GameNode).delete({});
     await ds.getRepository(Segment).delete({});
+    await ds.getRepository(Game).delete({});
     await ds.getRepository(Text).delete({});
     await ds.getRepository(YemotCall).delete({});
     await ds.getRepository(User).delete({});
@@ -66,6 +68,7 @@ describe('YemotHandlerService (e2e)', () => {
 
   async function seedDndTexts() {
     return ds.getRepository(Text).save([
+      { userId: 0, name: 'DND.NO_ACTIVE_GAME', description: 'x', value: 'No active game' },
       { userId: 0, name: 'DND.GAME_NOT_FOUND', description: 'x', value: 'Game not found' },
       { userId: 0, name: 'DND.BROKEN_TREE',    description: 'x', value: 'Broken tree' },
       { userId: 0, name: 'DND.INVALID_CHOICE', description: 'x', value: 'Invalid choice' },
@@ -75,29 +78,32 @@ describe('YemotHandlerService (e2e)', () => {
   }
 
   async function seedGame(userId: number) {
+    const game = await ds.getRepository(Game).save({ userId, title: 'Test Adventure', isActive: true });
+    const gameId = game.id;
+
     const [segStart, segChoice, segNorth, segSouth] = await ds.getRepository(Segment).save([
-      { userId, name: 'start',  title: 'Intro',     value: 'Welcome to DnD' },
-      { userId, name: 'choice', title: 'Direction', value: 'Go north(1) or south(2)?' },
-      { userId, name: 'north',  title: 'North',     value: 'You found treasure!' },
-      { userId, name: 'south',  title: 'South',     value: 'You fell in a pit!' },
+      { userId, gameId, name: 'start',  title: 'Intro',     value: 'Welcome to DnD' },
+      { userId, gameId, name: 'choice', title: 'Direction', value: 'Go north(1) or south(2)?' },
+      { userId, gameId, name: 'north',  title: 'North',     value: 'You found treasure!' },
+      { userId, gameId, name: 'south',  title: 'South',     value: 'You fell in a pit!' },
     ]);
 
     const [nodeStart, nodeChoice, nodeNorth, nodeSouth] = await ds.getRepository(GameNode).save([
-      { userId, name: 'start',  segmentId: segStart.id,  nodeType: 'start' },
-      { userId, name: 'choice', segmentId: segChoice.id, nodeType: null },
-      { userId, name: 'north',  segmentId: segNorth.id,  nodeType: 'end' },
-      { userId, name: 'south',  segmentId: segSouth.id,  nodeType: 'end' },
+      { userId, gameId, name: 'start',  segmentId: segStart.id,  nodeType: 'start' },
+      { userId, gameId, name: 'choice', segmentId: segChoice.id, nodeType: null },
+      { userId, gameId, name: 'north',  segmentId: segNorth.id,  nodeType: 'end' },
+      { userId, gameId, name: 'south',  segmentId: segSouth.id,  nodeType: 'end' },
     ]);
 
     const [choiceNorth, choiceSouth] = await ds.getRepository(Choice).save([
-      { userId, nodeId: nodeChoice.id, inputKey: 1, description: 'North' },
-      { userId, nodeId: nodeChoice.id, inputKey: 2, description: 'South' },
+      { userId, gameId, nodeId: nodeChoice.id, inputKey: 1, description: 'North' },
+      { userId, gameId, nodeId: nodeChoice.id, inputKey: 2, description: 'South' },
     ]);
 
     await ds.getRepository(RoutingRule).save([
-      { userId, sourceNodeId: nodeStart.id,  choiceId: null,            targetNodeId: nodeChoice.id },
-      { userId, sourceNodeId: nodeChoice.id, choiceId: choiceNorth.id,  targetNodeId: nodeNorth.id },
-      { userId, sourceNodeId: nodeChoice.id, choiceId: choiceSouth.id,  targetNodeId: nodeSouth.id },
+      { userId, gameId, sourceNodeId: nodeStart.id,  choiceId: null,            targetNodeId: nodeChoice.id },
+      { userId, gameId, sourceNodeId: nodeChoice.id, choiceId: choiceNorth.id,  targetNodeId: nodeNorth.id },
+      { userId, gameId, sourceNodeId: nodeChoice.id, choiceId: choiceSouth.id,  targetNodeId: nodeSouth.id },
     ]);
   }
 
@@ -111,9 +117,21 @@ describe('YemotHandlerService (e2e)', () => {
     expect(text).not.toContain('read=');
   });
 
-  it('user exists, no start node → DND.GAME_NOT_FOUND hangup', async () => {
+  it('user exists, no active game → DND.NO_ACTIVE_GAME hangup', async () => {
+    await seedUser();
+    await seedDndTexts();
+
+    const { text } = await request(app.getHttpServer())
+      .get(ROUTE).query(newParams()).expect(200);
+
+    expect(text).toContain('No active game');
+    expect(text).not.toContain('read=');
+  });
+
+  it('active game but no start node → DND.GAME_NOT_FOUND hangup', async () => {
     const { id: userId } = await seedUser();
     await seedDndTexts();
+    await ds.getRepository(Game).save({ userId, title: 'Empty Game', isActive: true });
 
     const { text } = await request(app.getHttpServer())
       .get(ROUTE).query(newParams()).expect(200);
