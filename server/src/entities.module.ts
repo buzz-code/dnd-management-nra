@@ -4,9 +4,6 @@ import { createSharedEntitiesImports } from '@shared/entities/createSharedEntiti
 import userConfig from '@shared/entities/configs/user.config';
 import { createAuditLogConfig } from '@shared/entities/configs/audit-log.config';
 import { registerEntityNameMap } from '@shared/entities/configs/import-file.config';
-import phoneTemplateConfig from '@shared/entities/configs/phone-template.config';
-import phoneCampaignConfig from '@shared/entities/configs/phone-campaign.config';
-
 import { Segment } from './db/entities/Segment.entity';
 import { Layer } from './db/entities/Layer.entity';
 
@@ -37,10 +34,6 @@ registerEntityNameMap({
     BaseEntityModule.register(gameNodeConfig),
     BaseEntityModule.register(choiceConfig),
     BaseEntityModule.register(routingRuleConfig),
-
-    // Phone system
-    BaseEntityModule.register(phoneTemplateConfig),
-    BaseEntityModule.register(phoneCampaignConfig),
 
     // Audit log
     BaseEntityModule.register(
