@@ -6,17 +6,27 @@ import { IsNotEmpty, MaxLength, IsNumber } from '@shared/utils/validation/class-
 import { StringType, NumberType } from '@shared/utils/entity/class-transformer';
 import { IsOptional } from 'class-validator';
 import { IHasUserId } from '@shared/base-entity/interface';
+import { Game } from './Game.entity';
 import { GameNode } from './GameNode.entity';
 
 @Entity('choices')
 @Index('choices_user_id_idx', ['userId'], {})
 @Index('choices_node_id_idx', ['nodeId'], {})
+@Index('choices_game_id_idx', ['gameId'], {})
 export class Choice implements IHasUserId {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column('int', { name: 'user_id' })
   userId: number;
+
+  @IsOptional({ always: true })
+  @Column('int', { nullable: true })
+  gameId: number;
+
+  @ManyToOne(() => Game, { nullable: true })
+  @JoinColumn({ name: 'gameId' })
+  game: Game;
 
   @Column('int')
   nodeId: number;
@@ -40,7 +50,7 @@ export class Choice implements IHasUserId {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @ManyToOne(() => GameNode, { nullable: false })
+  @ManyToOne(() => GameNode, (node) => node.choices, { nullable: false })
   @JoinColumn({ name: 'nodeId' })
   node: GameNode;
 }

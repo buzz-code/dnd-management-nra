@@ -11,10 +11,19 @@ export default {
     },
     resources: {
         ...sharedEntityTranslations,
+        game: {
+            name: 'משחק |||| משחקים',
+            fields: {
+                ...generalResourceFieldsTranslation,
+                name: 'שם',
+                isActive: 'פעיל',
+            },
+        },
         segment: {
             name: 'קטע |||| קטעים',
             fields: {
                 ...generalResourceFieldsTranslation,
+                gameId: 'משחק',
                 name: 'שם',
                 title: 'תווית',
                 value: 'טקסט להקראה',
@@ -33,6 +42,7 @@ export default {
             name: 'צומת |||| צמתים',
             fields: {
                 ...generalResourceFieldsTranslation,
+                gameId: 'משחק',
                 name: 'שם',
                 nodeType: 'סוג צומת',
                 layerId: 'שכבה',
@@ -43,6 +53,7 @@ export default {
             name: 'בחירה |||| בחירות',
             fields: {
                 ...generalResourceFieldsTranslation,
+                gameId: 'משחק',
                 nodeId: 'צומת',
                 inputKey: 'מקש',
                 description: 'תיאור',
@@ -52,6 +63,7 @@ export default {
             name: 'כלל ניתוב |||| כללי ניתוב',
             fields: {
                 ...generalResourceFieldsTranslation,
+                gameId: 'משחק',
                 sourceNodeId: 'צומת מקור',
                 choiceId: 'בחירה',
                 diceOptions: 'אפשרויות קובייה',
