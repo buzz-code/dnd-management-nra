@@ -1,4 +1,4 @@
-import { TextField, TextInput, ReferenceField, required, maxLength } from 'react-admin';
+import { TextField, TextInput, ReferenceField, DateField, DateTimeInput, required, maxLength } from 'react-admin';
 import { CommonDatagrid } from '@shared/components/crudContainers/CommonList';
 import { CommonRepresentation } from '@shared/components/CommonRepresentation';
 import { getResourceComponents } from '@shared/components/crudContainers/CommonEntity';
@@ -16,6 +16,8 @@ const Datagrid = ({ isAdmin, ...props }) => (
         <ReferenceField source="choiceId" reference="choice" />
         <TextField source="diceOptions" />
         <ReferenceField source="targetNodeId" reference="node" />
+        {isAdmin && <DateField showDate showTime source="createdAt" />}
+        {isAdmin && <DateField showDate showTime source="updatedAt" />}
     </CommonDatagrid>
 );
 
@@ -26,6 +28,8 @@ const Inputs = ({ isCreate, isAdmin }) => (
         <CommonReferenceInput source="choiceId" reference="choice" />
         <TextInput source="diceOptions" validate={[maxLength(255)]} />
         <CommonReferenceInput source="targetNodeId" reference="node" validate={required()} />
+        {!isCreate && isAdmin && <DateTimeInput source="createdAt" disabled />}
+        {!isCreate && isAdmin && <DateTimeInput source="updatedAt" disabled />}
     </>
 );
 

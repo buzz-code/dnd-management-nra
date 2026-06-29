@@ -1,4 +1,4 @@
-import { TextField, TextInput, ReferenceField, required, maxLength } from 'react-admin';
+import { TextField, TextInput, ReferenceField, DateField, DateTimeInput, required, maxLength } from 'react-admin';
 import { CommonDatagrid } from '@shared/components/crudContainers/CommonList';
 import { CommonRepresentation } from '@shared/components/CommonRepresentation';
 import { getResourceComponents } from '@shared/components/crudContainers/CommonEntity';
@@ -17,6 +17,8 @@ const Datagrid = ({ isAdmin, ...props }) => (
         <TextField source="title" />
         <TextField source="value" />
         <TextField source="filepath" />
+        {isAdmin && <DateField showDate showTime source="createdAt" />}
+        {isAdmin && <DateField showDate showTime source="updatedAt" />}
     </CommonDatagrid>
 );
 
@@ -27,6 +29,8 @@ const Inputs = ({ isCreate, isAdmin }) => (
         <TextInput source="title" validate={[maxLength(255)]} />
         <TextInput source="value" multiline />
         <TextInput source="filepath" validate={[maxLength(500)]} />
+        {!isCreate && isAdmin && <DateTimeInput source="createdAt" disabled />}
+        {!isCreate && isAdmin && <DateTimeInput source="updatedAt" disabled />}
     </>
 );
 

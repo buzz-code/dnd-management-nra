@@ -1,4 +1,4 @@
-import { TextField, TextInput, NumberInput, NumberField, ReferenceField, required, number } from 'react-admin';
+import { TextField, TextInput, NumberInput, NumberField, ReferenceField, DateField, DateTimeInput, required, number } from 'react-admin';
 import { CommonDatagrid } from '@shared/components/crudContainers/CommonList';
 import { CommonRepresentation } from '@shared/components/CommonRepresentation';
 import { getResourceComponents } from '@shared/components/crudContainers/CommonEntity';
@@ -15,6 +15,8 @@ const Datagrid = ({ isAdmin, ...props }) => (
         <ReferenceField source="nodeId" reference="node" />
         <NumberField source="inputKey" />
         <TextField source="description" />
+        {isAdmin && <DateField showDate showTime source="createdAt" />}
+        {isAdmin && <DateField showDate showTime source="updatedAt" />}
     </CommonDatagrid>
 );
 
@@ -24,6 +26,8 @@ const Inputs = ({ isCreate, isAdmin }) => (
         <CommonReferenceInput source="nodeId" reference="node" validate={required()} />
         <NumberInput source="inputKey" validate={[required(), number()]} />
         <TextInput source="description" />
+        {!isCreate && isAdmin && <DateTimeInput source="createdAt" disabled />}
+        {!isCreate && isAdmin && <DateTimeInput source="updatedAt" disabled />}
     </>
 );
 
