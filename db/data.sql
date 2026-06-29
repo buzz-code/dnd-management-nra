@@ -1,4 +1,4 @@
--- Event Management System Database Initialization
+-- DnD Management System Database Initialization
 
 -- Create and select the database
 CREATE DATABASE IF NOT EXISTS `dnd_management_nra`;
@@ -21,8 +21,8 @@ CREATE TABLE IF NOT EXISTS `mysql`.`component` (
 
 -- Create initial user for the application
 -- Using environment variables passed from Docker configuration
-CREATE USER IF NOT EXISTS 'event_user'@'%' IDENTIFIED BY 'rootPass';
-GRANT ALL PRIVILEGES ON `dnd_management_nra`.* TO 'event_user'@'%';
+CREATE USER IF NOT EXISTS 'dnd_user'@'%' IDENTIFIED BY 'rootPass';
+GRANT ALL PRIVILEGES ON `dnd_management_nra`.* TO 'dnd_user'@'%';
 FLUSH PRIVILEGES;
 
 -- Basic application tables will be created by TypeORM migrations
