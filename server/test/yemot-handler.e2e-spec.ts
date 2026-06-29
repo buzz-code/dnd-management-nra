@@ -78,7 +78,7 @@ describe('YemotHandlerService (e2e)', () => {
   }
 
   async function seedGame(userId: number) {
-    const game = await ds.getRepository(Game).save({ userId, title: 'Test Adventure', isActive: true });
+    const game = await ds.getRepository(Game).save({ userId, name: 'Test Adventure', isActive: true });
     const gameId = game.id;
 
     const [segStart, segChoice, segNorth, segSouth] = await ds.getRepository(Segment).save([
