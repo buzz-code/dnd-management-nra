@@ -1,16 +1,20 @@
 import { TextField, TextInput, NumberInput, NumberField, ReferenceField, DateField, DateTimeInput, required, number } from 'react-admin';
 import { CommonDatagrid } from '@shared/components/crudContainers/CommonList';
-import { CommonRepresentation } from '@shared/components/CommonRepresentation';
 import { getResourceComponents } from '@shared/components/crudContainers/CommonEntity';
 import CommonReferenceInput from '@shared/components/fields/CommonReferenceInput';
+import { adminUserFilter } from '@shared/components/fields/PermissionFilter';
+import { CommonReferenceInputFilter } from '@shared/components/fields/CommonReferenceInputFilter';
 
 const filters = [
+    adminUserFilter,
+    <CommonReferenceInputFilter source="gameId" reference="game" />,
     <TextInput source="description:$cont" alwaysOn />,
 ];
 
 const Datagrid = ({ isAdmin, ...props }) => (
     <CommonDatagrid {...props}>
         {isAdmin && <TextField source="id" />}
+        {isAdmin && <ReferenceField source="userId" reference="user" />}
         <ReferenceField source="gameId" reference="game" />
         <ReferenceField source="nodeId" reference="node" />
         <NumberField source="inputKey" />
@@ -22,6 +26,7 @@ const Datagrid = ({ isAdmin, ...props }) => (
 
 const Inputs = ({ isCreate, isAdmin }) => (
     <>
+        {isAdmin && <CommonReferenceInput source="userId" reference="user" />}
         <CommonReferenceInput source="gameId" reference="game" />
         <CommonReferenceInput source="nodeId" reference="node" validate={required()} />
         <NumberInput source="inputKey" validate={[required(), number()]} />
@@ -31,4 +36,6 @@ const Inputs = ({ isCreate, isAdmin }) => (
     </>
 );
 
-export default getResourceComponents({ Datagrid, Inputs, Representation: CommonRepresentation, filters });
+const Representation = (record) => `${record.inputKey} - ${record.description || ''}`;
+
+export default getResourceComponents({ Datagrid, Inputs, Representation, filters });

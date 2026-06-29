@@ -1,16 +1,19 @@
-import { TextField, TextInput, BooleanField, BooleanInput, DateField, DateTimeInput, required, maxLength } from 'react-admin';
+import { TextField, TextInput, BooleanField, BooleanInput, DateField, DateTimeInput, ReferenceField, required, maxLength } from 'react-admin';
 import { CommonDatagrid } from '@shared/components/crudContainers/CommonList';
-import { CommonRepresentation } from '@shared/components/CommonRepresentation';
 import { getResourceComponents } from '@shared/components/crudContainers/CommonEntity';
+import CommonReferenceInput from '@shared/components/fields/CommonReferenceInput';
+import { adminUserFilter } from '@shared/components/fields/PermissionFilter';
 
 const filters = [
-    <TextInput source="title:$cont" alwaysOn />,
+    adminUserFilter,
+    <TextInput source="name:$cont" alwaysOn />,
 ];
 
 const Datagrid = ({ isAdmin, ...props }) => (
     <CommonDatagrid {...props}>
         {isAdmin && <TextField source="id" />}
-        <TextField source="title" />
+        {isAdmin && <ReferenceField source="userId" reference="user" />}
+        <TextField source="name" />
         <BooleanField source="isActive" />
         {isAdmin && <DateField showDate showTime source="createdAt" />}
         {isAdmin && <DateField showDate showTime source="updatedAt" />}
@@ -19,11 +22,12 @@ const Datagrid = ({ isAdmin, ...props }) => (
 
 const Inputs = ({ isCreate, isAdmin }) => (
     <>
-        <TextInput source="title" validate={[required(), maxLength(255)]} />
+        {isAdmin && <CommonReferenceInput source="userId" reference="user" />}
+        <TextInput source="name" validate={[required(), maxLength(255)]} />
         <BooleanInput source="isActive" />
         {!isCreate && isAdmin && <DateTimeInput source="createdAt" disabled />}
         {!isCreate && isAdmin && <DateTimeInput source="updatedAt" disabled />}
     </>
 );
 
-export default getResourceComponents({ Datagrid, Inputs, Representation: CommonRepresentation, filters });
+export default getResourceComponents({ Datagrid, Inputs, Representation: 'name', filters });

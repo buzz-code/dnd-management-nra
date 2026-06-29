@@ -15,7 +15,7 @@ export default {
             name: 'משחק |||| משחקים',
             fields: {
                 ...generalResourceFieldsTranslation,
-                title: 'שם',
+                name: 'שם',
                 isActive: 'פעיל',
             },
         },

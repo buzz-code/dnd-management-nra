@@ -9,7 +9,7 @@ function getConfig(): BaseEntityModuleOptions {
     exporter: {
       getExportHeaders(): IHeader[] {
         return [
-          { value: 'title', label: 'שם' },
+          { value: 'name', label: 'שם' },
           { value: 'isActive', label: 'פעיל' },
         ];
       },

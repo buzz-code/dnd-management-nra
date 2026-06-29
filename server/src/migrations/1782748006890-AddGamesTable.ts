@@ -8,7 +8,7 @@ export class AddGamesTable1782748006890 implements MigrationInterface {
             CREATE TABLE \`games\` (
                 \`id\` int NOT NULL AUTO_INCREMENT,
                 \`user_id\` int NOT NULL,
-                \`title\` varchar(255) NOT NULL,
+                \`name\` varchar(255) NOT NULL,
                 \`isActive\` tinyint NOT NULL DEFAULT 0,
                 \`createdAt\` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
                 \`updatedAt\` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),

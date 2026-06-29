@@ -21,7 +21,7 @@ export class Game implements IHasUserId {
   @StringType
   @MaxLength(255, { always: true })
   @Column({ length: 255 })
-  title: string;
+  name: string;
 
   @IsOptional({ always: true })
   @Column({ default: false })
