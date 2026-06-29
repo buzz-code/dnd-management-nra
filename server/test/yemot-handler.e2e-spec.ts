@@ -131,7 +131,7 @@ describe('YemotHandlerService (e2e)', () => {
   it('active game but no start node → DND.GAME_NOT_FOUND hangup', async () => {
     const { id: userId } = await seedUser();
     await seedDndTexts();
-    await ds.getRepository(Game).save({ userId, title: 'Empty Game', isActive: true });
+    await ds.getRepository(Game).save({ userId, name: 'Empty Game', isActive: true });
 
     const { text } = await request(app.getHttpServer())
       .get(ROUTE).query(newParams()).expect(200);
