@@ -1,7 +1,8 @@
-import { TextField, TextInput, required, maxLength } from 'react-admin';
+import { TextField, TextInput, ReferenceField, required, maxLength } from 'react-admin';
 import { CommonDatagrid } from '@shared/components/crudContainers/CommonList';
 import { CommonRepresentation } from '@shared/components/CommonRepresentation';
 import { getResourceComponents } from '@shared/components/crudContainers/CommonEntity';
+import CommonReferenceInput from '@shared/components/fields/CommonReferenceInput';
 
 const filters = [
     <TextInput source="name:$cont" alwaysOn />,
@@ -11,6 +12,7 @@ const filters = [
 const Datagrid = ({ isAdmin, ...props }) => (
     <CommonDatagrid {...props}>
         {isAdmin && <TextField source="id" />}
+        <ReferenceField source="gameId" reference="game" />
         <TextField source="name" />
         <TextField source="title" />
         <TextField source="value" />
@@ -20,6 +22,7 @@ const Datagrid = ({ isAdmin, ...props }) => (
 
 const Inputs = ({ isCreate, isAdmin }) => (
     <>
+        <CommonReferenceInput source="gameId" reference="game" />
         <TextInput source="name" validate={[required(), maxLength(255)]} />
         <TextInput source="title" validate={[maxLength(255)]} />
         <TextInput source="value" multiline />

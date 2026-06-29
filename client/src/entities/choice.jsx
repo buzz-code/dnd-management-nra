@@ -11,6 +11,7 @@ const filters = [
 const Datagrid = ({ isAdmin, ...props }) => (
     <CommonDatagrid {...props}>
         {isAdmin && <TextField source="id" />}
+        <ReferenceField source="gameId" reference="game" />
         <ReferenceField source="nodeId" reference="node" />
         <NumberField source="inputKey" />
         <TextField source="description" />
@@ -19,6 +20,7 @@ const Datagrid = ({ isAdmin, ...props }) => (
 
 const Inputs = ({ isCreate, isAdmin }) => (
     <>
+        <CommonReferenceInput source="gameId" reference="game" />
         <CommonReferenceInput source="nodeId" reference="node" validate={required()} />
         <NumberInput source="inputKey" validate={[required(), number()]} />
         <TextInput source="description" />
