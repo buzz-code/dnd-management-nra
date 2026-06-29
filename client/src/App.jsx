@@ -1,4 +1,5 @@
-import { Resource } from 'react-admin';
+import { Resource, CustomRoutes } from 'react-admin';
+import { Route } from 'react-router-dom';
 import { teal, orange } from '@mui/material/colors';
 
 import domainTranslations from 'src/domainTranslations';
@@ -18,6 +19,7 @@ import layer from 'src/entities/layer';
 import gameNode from 'src/entities/game-node';
 import choice from 'src/entities/choice';
 import routingRule from 'src/entities/routing-rule';
+import StorySimulator from 'src/entities/storySimulator';
 
 import phoneCampaign from '@shared/components/common-entities/phone-campaign';
 import phoneTemplate from '@shared/components/common-entities/phone-template';
@@ -60,6 +62,10 @@ const App = () => (
                     </>
                 )}
                 {CommonAdminResources({ permissions })}
+
+                <CustomRoutes>
+                    <Route path="/story-simulator" element={<StorySimulator />} />
+                </CustomRoutes>
 
                 {CommonRoutes({ permissions, roadmapFeatures, settingsPage: <Settings /> })}
             </>

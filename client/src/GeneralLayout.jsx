@@ -3,6 +3,7 @@ import HelpIcon from '@mui/icons-material/Help';
 import ImportContactsIcon from '@mui/icons-material/ImportContacts';
 import CallIcon from '@mui/icons-material/Call';
 import MapIcon from '@mui/icons-material/Map';
+import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import SettingsIcon from '@mui/icons-material/Settings';
 import LayersIcon from '@mui/icons-material/Layers';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
@@ -13,6 +14,7 @@ import BaseDashboard from '@shared/components/views/Dashboard';
 import { useDashboardItems } from './settings/settingsUtil';
 
 const customMenuItems = [
+    <MenuItemLink key="story-simulator" to="/story-simulator" primaryText="סימולטור סיפור" leftIcon={<AutoStoriesIcon />} />,
     <MenuItemLink key="tutorial" to="/tutorial" primaryText="מדריך למשתמש" leftIcon={<HelpIcon />} />,
     <MenuItemLink key="pages-view" to="/pages-view" primaryText="הסברים נוספים" leftIcon={<ImportContactsIcon />} />,
     <MenuItemLink key="roadmap" to="/roadmap" primaryText="פיתוחים עתידיים" leftIcon={<MapIcon />} />,
