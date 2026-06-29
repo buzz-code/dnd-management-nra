@@ -40,7 +40,7 @@ export class Choice implements IHasUserId {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @ManyToOne(() => GameNode, { nullable: false })
+  @ManyToOne(() => GameNode, (node) => node.choices, { nullable: false })
   @JoinColumn({ name: 'nodeId' })
   node: GameNode;
 }

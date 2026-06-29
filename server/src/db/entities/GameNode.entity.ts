@@ -1,5 +1,5 @@
 import {
-  Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn, Index, JoinColumn,
+  Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn, Index, JoinColumn,
 } from 'typeorm';
 import { CrudValidationGroups } from '@dataui/crud';
 import { IsNotEmpty, MaxLength } from '@shared/utils/validation/class-validator-he';
@@ -8,6 +8,8 @@ import { IsOptional } from 'class-validator';
 import { IHasUserId } from '@shared/base-entity/interface';
 import { Layer } from './Layer.entity';
 import { Segment } from './Segment.entity';
+import { Choice } from './Choice.entity';
+import { RoutingRule } from './RoutingRule.entity';
 
 // Named GameNode to avoid collision with the global DOM/Node.js `Node` type
 @Entity('nodes')
@@ -52,4 +54,10 @@ export class GameNode implements IHasUserId {
   @ManyToOne(() => Segment, { nullable: true })
   @JoinColumn({ name: 'segmentId' })
   segment: Segment;
+
+  @OneToMany(() => Choice, (choice) => choice.node)
+  choices: Choice[];
+
+  @OneToMany(() => RoutingRule, (rule) => rule.sourceNode)
+  outgoingRules: RoutingRule[];
 }

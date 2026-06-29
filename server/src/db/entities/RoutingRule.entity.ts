@@ -39,7 +39,7 @@ export class RoutingRule implements IHasUserId {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @ManyToOne(() => GameNode, { nullable: false })
+  @ManyToOne(() => GameNode, (node) => node.outgoingRules, { nullable: false })
   @JoinColumn({ name: 'sourceNodeId' })
   sourceNode: GameNode;
 
