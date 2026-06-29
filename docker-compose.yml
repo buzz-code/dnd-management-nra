@@ -1,0 +1,147 @@
+version: "3.8"
+services:
+    client:
+        container_name: client
+        restart: unless-stopped
+        depends_on:
+            - server
+        build:
+            context: ./client
+            target: production
+        pull_policy: build
+        environment:
+            PORT: 80
+            YARN_CACHE_FOLDER: /yarn-cache
+        labels:
+            caddy: $DOMAIN_NAME
+            caddy.reverse_proxy: "{{upstreams 80}}"
+            caddy.reverse_proxy.health_uri: "/"
+            caddy.reverse_proxy.health_interval: 5s
+            caddy.reverse_proxy.health_timeout: 5s
+        volumes:
+            - ./client:/app
+        networks:
+            - private-network
+            - caddy
+            - elknet
+        healthcheck:
+            test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/"]
+            interval: 30s
+            timeout: 10s
+            start_period: 30s
+            retries: 3
+        deploy:
+            update_config:
+                parallelism: 1
+                delay: 10s
+                order: start-first
+            rollback_config:
+                parallelism: 1
+                delay: 5s
+            restart_policy:
+                condition: on-failure
+                delay: 5s
+                max_attempts: 3
+                window: 120s
+
+
+    server:
+        container_name: server
+        restart: unless-stopped
+        build:
+            context: ./server
+            target: production
+        pull_policy: build
+        environment:
+            DOMAIN_NAME: $DOMAIN_NAME
+            MYSQL_HOST: $MYSQL_HOST
+            MYSQL_USER: $MYSQL_USER
+            MYSQL_PASSWORD: $MYSQL_PASSWORD
+            MYSQL_DATABASE: $MYSQL_DATABASE
+            JWT_SECRET: $JWT_SECRET
+            ADMIN_USER: $ADMIN_USER
+            SMTP_USER: $SMTP_USER
+            SMTP_PASSWORD: $SMTP_PASSWORD
+            YARN_CACHE_FOLDER: /yarn-cache
+            MAINTENANCE_MODE: $MAINTENANCE_MODE
+            MAINTENANCE_MESSAGE: $MAINTENANCE_MESSAGE
+        depends_on:
+            - database
+        labels:
+            caddy: api.$DOMAIN_NAME
+            caddy.reverse_proxy: "{{upstreams 3000}}"
+            caddy.reverse_proxy.health_uri: "/health"
+            caddy.reverse_proxy.health_interval: 5s
+            caddy.reverse_proxy.health_timeout: 5s
+        volumes: 
+            - ./server:/app
+        networks:
+            - private-network
+            - caddy
+            - elknet
+        healthcheck:
+            test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
+            interval: 30s
+            timeout: 10s
+            start_period: 60s
+            retries: 3
+        deploy:
+            update_config:
+                parallelism: 1
+                delay: 10s
+                order: start-first
+            rollback_config:
+                parallelism: 1
+                delay: 5s
+            restart_policy:
+                condition: on-failure
+                delay: 5s
+                max_attempts: 3
+                window: 120s
+
+    database:
+        container_name: database
+        restart: unless-stopped
+        build:
+            context: ./db
+        cap_add:
+            - SYS_NICE
+        command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+        environment:
+            MYSQL_DATABASE: $MYSQL_DATABASE
+            MYSQL_USER: $MYSQL_USER
+            MYSQL_PASSWORD: $MYSQL_PASSWORD
+            MYSQL_ROOT_PASSWORD: $MYSQL_ROOT_PASSWORD
+        volumes:
+            - "db_data:/var/lib/mysql"
+        networks:
+            - private-network
+
+    phpmyadmin:
+        container_name: phpmyadmin
+        restart: unless-stopped
+        depends_on:
+            - database
+        image: phpmyadmin:5.2.1
+        labels:
+            caddy: sql.$DOMAIN_NAME
+            caddy.reverse_proxy: "{{upstreams 80}}"
+        environment:
+            PMA_HOST: $MYSQL_HOST
+            MYSQL_ROOT_PASSWORD: $MYSQL_ROOT_PASSWORD
+        # ports:
+        #   - "80"
+        networks:
+            - private-network
+            - caddy
+
+
+volumes:
+    db_data:
+
+networks:
+    private-network:
+    caddy:
+        external: true
+    elknet:
+        external: true
