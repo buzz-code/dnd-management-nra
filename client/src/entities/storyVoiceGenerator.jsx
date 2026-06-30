@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Form, SaveButton, SelectInput, TextInput, Title, required, useDataProvider, useInput, useNotify } from 'react-admin';
+import { AutocompleteInput, Form, SaveButton, SelectInput, TextInput, Title, required, useDataProvider, useNotify } from 'react-admin';
 import {
-    Alert, Autocomplete, Box, Button, Card, CardContent, Chip, CircularProgress, Divider, Stack, TextField, Typography,
+    Alert, Box, Button, Card, CardContent, Chip, CircularProgress, Divider, Stack, TextField, Typography,
 } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import GraphicEqIcon from '@mui/icons-material/GraphicEq';
@@ -51,79 +51,21 @@ function JsonInputStage({ jsonText, onParse, parseError }) {
     );
 }
 
-function VoiceAutocomplete({ source, label, validate }) {
-    const { field, fieldState } = useInput({ source, validate });
-    const [options, setOptions] = useState([]);
-    const [inputValue, setInputValue] = useState('');
-    const [loading, setLoading] = useState(false);
+function GenerateForm({ segments, characters, onSubmit, generating }) {
+    const [voiceChoices, setVoiceChoices] = useState([]);
 
     useEffect(() => {
-        let cancelled = false;
-        const timer = setTimeout(() => {
-            setLoading(true);
-            const params = new URLSearchParams({ page_size: '20' });
-            if (inputValue) params.set('search', inputValue);
-            else params.set('sort', 'usage_character_count_1y');
-            fetch(`https://api.elevenlabs.io/v1/shared-voices?${params}`)
-                .then(r => r.json())
-                .then(data => { if (!cancelled) setOptions(data.voices ?? []); })
-                .catch(() => {})
-                .finally(() => { if (!cancelled) setLoading(false); });
-        }, inputValue ? 400 : 0);
-        return () => { cancelled = true; clearTimeout(timer); };
-    }, [inputValue]);
+        fetch('https://api.elevenlabs.io/v1/shared-voices?page_size=100&sort=usage_character_count_1y')
+            .then(r => r.json())
+            .then(({ voices = [] }) => setVoiceChoices(
+                voices.map(({ voice_id, name, gender, accent, descriptive }) => ({
+                    id: voice_id,
+                    name: [name, gender, accent, descriptive].filter(Boolean).join(' · '),
+                }))
+            ))
+            .catch(() => {});
+    }, []);
 
-    return (
-        <Autocomplete
-            options={options}
-            getOptionLabel={v => v.name ?? ''}
-            isOptionEqualToValue={(opt, val) => opt.voice_id === val?.voice_id}
-            value={options.find(v => v.voice_id === field.value) ?? null}
-            onChange={(_, v) => field.onChange(v?.voice_id ?? '')}
-            inputValue={inputValue}
-            onInputChange={(_, v, reason) => {
-                setInputValue(v);
-                if (reason === 'clear') field.onChange('');
-            }}
-            loading={loading}
-            noOptionsText="לא נמצאו קולות"
-            loadingText="טוען..."
-            renderInput={params => (
-                <TextField
-                    {...params}
-                    label={label}
-                    fullWidth
-                    error={!!fieldState.error}
-                    helperText={fieldState.error?.message}
-                    InputProps={{
-                        ...params.InputProps,
-                        endAdornment: (
-                            <>
-                                {loading && <CircularProgress size={16} />}
-                                {params.InputProps.endAdornment}
-                            </>
-                        ),
-                    }}
-                />
-            )}
-            renderOption={(props, option) => {
-                const { key, ...optProps } = props;
-                const meta = [option.gender, option.accent, option.descriptive].filter(Boolean).join(' · ');
-                return (
-                    <li key={option.voice_id} {...optProps}>
-                        <Box>
-                            <Typography variant="body2">{option.name}</Typography>
-                            {meta && <Typography variant="caption" color="text.secondary">{meta}</Typography>}
-                        </Box>
-                    </li>
-                );
-            }}
-            sx={{ mb: 2 }}
-        />
-    );
-}
-
-function GenerateForm({ segments, characters, onSubmit, generating }) {
     const defaultValues = useMemo(() => ({
         name: '',
         modelId: DEFAULT_ELEVEN_LABS_MODEL,
@@ -150,11 +92,13 @@ function GenerateForm({ segments, characters, onSubmit, generating }) {
 
             <Typography variant="subtitle2" gutterBottom>בחירת קול לכל דמות</Typography>
             {characters.map(character => (
-                <VoiceAutocomplete
+                <AutocompleteInput
                     key={character}
                     source={`characterVoices.${character}`}
                     label={`קול עבור "${character}"`}
                     validate={required()}
+                    choices={voiceChoices}
+                    fullWidth
                 />
             ))}
 
