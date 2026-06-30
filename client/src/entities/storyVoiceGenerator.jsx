@@ -158,9 +158,12 @@ export default function StoryVoiceGenerator() {
         setGenerating(true);
         setResult(null);
         try {
-            const { data } = await dataProvider.create('story_voice', {
+            const { data: created } = await dataProvider.create('story_voice', {
                 data: { name, segments, characterVoices, modelId },
             });
+            // dataProvider.create() only echoes back the request body + id, not the
+            // server-computed status/filePath/errorMessage - re-fetch the real record.
+            const { data } = await dataProvider.getOne('story_voice', { id: created.id });
             setResult(data);
             if (data.status !== 'completed') {
                 notify(data.errorMessage || 'יצירת השמע נכשלה', { type: 'error' });
