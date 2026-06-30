@@ -9,7 +9,8 @@ export class YemotHandlerService extends BaseYemotHandlerService {
     await this.getUserByDidPhone();
     if (!this.user) return;
 
-    const activeGame = await this.dataSource.getRepository(Game)
+    const activeGame = await this.dataSource
+      .getRepository(Game)
       .findOne({ where: { userId: this.user.id, isActive: true } });
     if (!activeGame) {
       await this.hangupWithMessageByKey('DND.NO_ACTIVE_GAME');
@@ -37,7 +38,7 @@ export class YemotHandlerService extends BaseYemotHandlerService {
       }
 
       if (currentNode.choices.length > 0) {
-        const maxInputLen = Math.max(...currentNode.choices.map(c => c.inputKey.toString().length));
+        const maxInputLen = Math.max(...currentNode.choices.map((c) => c.inputKey.toString().length));
         let selectedChoice: (typeof currentNode.choices)[number] | undefined;
 
         while (!selectedChoice) {
@@ -45,7 +46,7 @@ export class YemotHandlerService extends BaseYemotHandlerService {
             min_digits: 1,
             max_digits: maxInputLen,
           });
-          selectedChoice = currentNode.choices.find(c => c.inputKey.toString() === userInput);
+          selectedChoice = currentNode.choices.find((c) => c.inputKey.toString() === userInput);
           if (!selectedChoice) {
             await this.sendMessageByKey('DND.INVALID_CHOICE');
           }
@@ -57,7 +58,6 @@ export class YemotHandlerService extends BaseYemotHandlerService {
           return;
         }
         currentNode = await this.loadNode({ id: next.id }, activeGame.id);
-
       } else {
         if (currentNode.nodeType === 'end') {
           await this.hangupWithMessageFromContent(currentNode.segment);
@@ -79,21 +79,19 @@ export class YemotHandlerService extends BaseYemotHandlerService {
   }
 
   private async evaluateNextRoute(node: GameNode, choiceId: number | null): Promise<GameNode | null> {
-    const rules = node.outgoingRules.filter(r =>
-      choiceId === null ? r.choiceId == null : r.choiceId === choiceId
-    );
+    const rules = node.outgoingRules.filter((r) => (choiceId === null ? r.choiceId == null : r.choiceId === choiceId));
 
     if (!rules.length) {
       this.logger.error(`Broken game tree: no routing rule from node ${node.id} (choice: ${choiceId})`);
       return null;
     }
 
-    const diceRules = rules.filter(r => r.diceOptions?.trim());
+    const diceRules = rules.filter((r) => r.diceOptions?.trim());
 
     if (diceRules.length) {
       const roll = Math.floor(Math.random() * 6) + 1;
       await this.sendMessageByKey('DND.DICE_RESULT', { roll });
-      const matched = diceRules.find(r => r.diceOptions!.split(',').includes(roll.toString()));
+      const matched = diceRules.find((r) => r.diceOptions!.split(',').includes(roll.toString()));
       return matched?.targetNode ?? diceRules[0].targetNode;
     }
 

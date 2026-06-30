@@ -16,18 +16,18 @@ import { RoutingRule } from 'src/db/entities/RoutingRule.entity';
 
 jest.setTimeout(30000);
 
-const DID   = '0772222770';
+const DID = '0772222770';
 const ROUTE = '/yemot/handle-call';
 
 function newParams(overrides: Record<string, string> = {}) {
   return {
-    ApiCallId:    crypto.randomBytes(10).toString('hex'),
-    ApiYFCallId:  crypto.randomBytes(10).toString('hex'),
-    ApiDID:       DID,
-    ApiRealDID:   DID,
-    ApiPhone:     '0521234567',
+    ApiCallId: crypto.randomBytes(10).toString('hex'),
+    ApiYFCallId: crypto.randomBytes(10).toString('hex'),
+    ApiDID: DID,
+    ApiRealDID: DID,
+    ApiPhone: '0521234567',
     ApiExtension: '',
-    ApiTime:      Date.now().toString(),
+    ApiTime: Date.now().toString(),
     ...overrides,
   };
 }
@@ -70,10 +70,10 @@ describe('YemotHandlerService (e2e)', () => {
     return ds.getRepository(Text).save([
       { userId: 0, name: 'DND.NO_ACTIVE_GAME', description: 'x', value: 'No active game' },
       { userId: 0, name: 'DND.GAME_NOT_FOUND', description: 'x', value: 'Game not found' },
-      { userId: 0, name: 'DND.BROKEN_TREE',    description: 'x', value: 'Broken tree' },
+      { userId: 0, name: 'DND.BROKEN_TREE', description: 'x', value: 'Broken tree' },
       { userId: 0, name: 'DND.INVALID_CHOICE', description: 'x', value: 'Invalid choice' },
-      { userId: 0, name: 'DND.GAME_ENDED',     description: 'x', value: 'Game ended' },
-      { userId: 0, name: 'DND.DICE_RESULT',    description: 'x', value: 'Dice: {roll}' },
+      { userId: 0, name: 'DND.GAME_ENDED', description: 'x', value: 'Game ended' },
+      { userId: 0, name: 'DND.DICE_RESULT', description: 'x', value: 'Dice: {roll}' },
     ]);
   }
 
@@ -82,17 +82,17 @@ describe('YemotHandlerService (e2e)', () => {
     const gameId = game.id;
 
     const [segStart, segChoice, segNorth, segSouth] = await ds.getRepository(Segment).save([
-      { userId, gameId, name: 'start',  title: 'Intro',     value: 'Welcome to DnD' },
+      { userId, gameId, name: 'start', title: 'Intro', value: 'Welcome to DnD' },
       { userId, gameId, name: 'choice', title: 'Direction', value: 'Go north(1) or south(2)?' },
-      { userId, gameId, name: 'north',  title: 'North',     value: 'You found treasure!' },
-      { userId, gameId, name: 'south',  title: 'South',     value: 'You fell in a pit!' },
+      { userId, gameId, name: 'north', title: 'North', value: 'You found treasure!' },
+      { userId, gameId, name: 'south', title: 'South', value: 'You fell in a pit!' },
     ]);
 
     const [nodeStart, nodeChoice, nodeNorth, nodeSouth] = await ds.getRepository(GameNode).save([
-      { userId, gameId, name: 'start',  segmentId: segStart.id,  nodeType: 'start' },
+      { userId, gameId, name: 'start', segmentId: segStart.id, nodeType: 'start' },
       { userId, gameId, name: 'choice', segmentId: segChoice.id, nodeType: null },
-      { userId, gameId, name: 'north',  segmentId: segNorth.id,  nodeType: 'end' },
-      { userId, gameId, name: 'south',  segmentId: segSouth.id,  nodeType: 'end' },
+      { userId, gameId, name: 'north', segmentId: segNorth.id, nodeType: 'end' },
+      { userId, gameId, name: 'south', segmentId: segSouth.id, nodeType: 'end' },
     ]);
 
     const [choiceNorth, choiceSouth] = await ds.getRepository(Choice).save([
@@ -101,9 +101,9 @@ describe('YemotHandlerService (e2e)', () => {
     ]);
 
     await ds.getRepository(RoutingRule).save([
-      { userId, gameId, sourceNodeId: nodeStart.id,  choiceId: null,            targetNodeId: nodeChoice.id },
-      { userId, gameId, sourceNodeId: nodeChoice.id, choiceId: choiceNorth.id,  targetNodeId: nodeNorth.id },
-      { userId, gameId, sourceNodeId: nodeChoice.id, choiceId: choiceSouth.id,  targetNodeId: nodeSouth.id },
+      { userId, gameId, sourceNodeId: nodeStart.id, choiceId: null, targetNodeId: nodeChoice.id },
+      { userId, gameId, sourceNodeId: nodeChoice.id, choiceId: choiceNorth.id, targetNodeId: nodeNorth.id },
+      { userId, gameId, sourceNodeId: nodeChoice.id, choiceId: choiceSouth.id, targetNodeId: nodeSouth.id },
     ]);
   }
 
@@ -121,8 +121,7 @@ describe('YemotHandlerService (e2e)', () => {
     await seedUser();
     await seedDndTexts();
 
-    const { text } = await request(app.getHttpServer())
-      .get(ROUTE).query(newParams()).expect(200);
+    const { text } = await request(app.getHttpServer()).get(ROUTE).query(newParams()).expect(200);
 
     expect(text).toContain('No active game');
     expect(text).not.toContain('read=');
@@ -133,8 +132,7 @@ describe('YemotHandlerService (e2e)', () => {
     await seedDndTexts();
     await ds.getRepository(Game).save({ userId, name: 'Empty Game', isActive: true });
 
-    const { text } = await request(app.getHttpServer())
-      .get(ROUTE).query(newParams()).expect(200);
+    const { text } = await request(app.getHttpServer()).get(ROUTE).query(newParams()).expect(200);
 
     expect(text).toContain('Game not found');
     expect(text).not.toContain('read=');
@@ -152,7 +150,9 @@ describe('YemotHandlerService (e2e)', () => {
     expect(r1.text).toContain('read=');
 
     const r2 = await request(app.getHttpServer())
-      .get(ROUTE).query({ ...p, val_1: '1' }).expect(200);
+      .get(ROUTE)
+      .query({ ...p, val_1: '1' })
+      .expect(200);
     expect(r2.text).toContain('You found treasure');
     expect(r2.text).toContain('go_to_folder=hangup');
     expect(r2.text).not.toContain('read=');
@@ -168,7 +168,9 @@ describe('YemotHandlerService (e2e)', () => {
     await request(app.getHttpServer()).get(ROUTE).query(p).expect(200);
 
     const r2 = await request(app.getHttpServer())
-      .get(ROUTE).query({ ...p, val_1: '2' }).expect(200);
+      .get(ROUTE)
+      .query({ ...p, val_1: '2' })
+      .expect(200);
     expect(r2.text).toContain('You fell in a pit');
     expect(r2.text).toContain('go_to_folder=hangup');
   });
@@ -183,12 +185,16 @@ describe('YemotHandlerService (e2e)', () => {
     await request(app.getHttpServer()).get(ROUTE).query(p).expect(200);
 
     const r2 = await request(app.getHttpServer())
-      .get(ROUTE).query({ ...p, val_1: '9' }).expect(200);
+      .get(ROUTE)
+      .query({ ...p, val_1: '9' })
+      .expect(200);
     expect(r2.text).toContain('Invalid choice');
     expect(r2.text).toContain('read=');
 
     const r3 = await request(app.getHttpServer())
-      .get(ROUTE).query({ ...p, val_2: '1' }).expect(200);
+      .get(ROUTE)
+      .query({ ...p, val_2: '1' })
+      .expect(200);
     expect(r3.text).toContain('You found treasure');
     expect(r3.text).toContain('go_to_folder=hangup');
   });

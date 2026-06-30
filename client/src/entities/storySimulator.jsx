@@ -2,8 +2,18 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Title, Form, SaveButton, TextInput, required, maxLength } from 'react-admin';
 import {
-    Alert, Box, Button, Card, CardActions, CardContent, Chip,
-    CircularProgress, Divider, LinearProgress, Stack, Typography,
+    Alert,
+    Box,
+    Button,
+    Card,
+    CardActions,
+    CardContent,
+    Chip,
+    CircularProgress,
+    Divider,
+    LinearProgress,
+    Stack,
+    Typography,
 } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
@@ -39,9 +49,11 @@ function SimulatorStart({ onFileLoaded, onPlay, loading, error }) {
         <Box display="flex" alignItems="center" justifyContent="center" minHeight="60vh" dir="rtl">
             <Card sx={{ maxWidth: 480, width: '100%', textAlign: 'center', p: 4 }}>
                 <CardContent>
-                    <Typography variant="h5" gutterBottom>סימולטור סיפור</Typography>
+                    <Typography variant="h5" gutterBottom>
+                        סימולטור סיפור
+                    </Typography>
 
-                    <Form onSubmit={values => onPlay(values.gameId)} defaultValues={{ gameId: null }}>
+                    <Form onSubmit={(values) => onPlay(values.gameId)} defaultValues={{ gameId: null }}>
                         <CommonReferenceInput
                             source="gameId"
                             reference="game"
@@ -58,7 +70,11 @@ function SimulatorStart({ onFileLoaded, onPlay, loading, error }) {
                             size="large"
                             sx={{ width: '100%' }}
                         />
-                        {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
+                        {error && (
+                            <Alert severity="error" sx={{ mt: 2 }}>
+                                {error}
+                            </Alert>
+                        )}
                     </Form>
 
                     <Divider sx={{ my: 3 }}>או</Divider>
@@ -74,7 +90,11 @@ function SimulatorStart({ onFileLoaded, onPlay, loading, error }) {
                             <input type="file" accept=".xlsx,.xls" hidden onChange={handleFile} />
                         </Button>
                     )}
-                    {fileError && <Typography color="error" mt={2} variant="body2">{fileError}</Typography>}
+                    {fileError && (
+                        <Typography color="error" mt={2} variant="body2">
+                            {fileError}
+                        </Typography>
+                    )}
                 </CardContent>
             </Card>
         </Box>
@@ -106,9 +126,13 @@ function SimulatorLoaded({ data, onStart, onReset }) {
         <Box display="flex" alignItems="center" justifyContent="center" minHeight="60vh" dir="rtl">
             <Card sx={{ maxWidth: 520, width: '100%', p: 3 }}>
                 <CardContent>
-                    <Typography variant="h5" gutterBottom>הקובץ נטען בהצלחה</Typography>
+                    <Typography variant="h5" gutterBottom>
+                        הקובץ נטען בהצלחה
+                    </Typography>
                     {storyTitle && (
-                        <Typography variant="h6" color="primary" gutterBottom>{storyTitle}</Typography>
+                        <Typography variant="h6" color="primary" gutterBottom>
+                            {storyTitle}
+                        </Typography>
                     )}
                     <Divider sx={{ my: 2 }} />
                     <Stack direction="row" spacing={1} mb={2}>
@@ -122,9 +146,14 @@ function SimulatorLoaded({ data, onStart, onReset }) {
                     )}
 
                     <Divider sx={{ my: 2 }} />
-                    <Typography variant="subtitle2" gutterBottom>העלאה לשרת</Typography>
+                    <Typography variant="subtitle2" gutterBottom>
+                        העלאה לשרת
+                    </Typography>
 
-                    <Form onSubmit={handleUploadSubmit} defaultValues={{ name: storyTitle, gameId: null, userId: null }}>
+                    <Form
+                        onSubmit={handleUploadSubmit}
+                        defaultValues={{ name: storyTitle, gameId: null, userId: null }}
+                    >
                         <TextInput
                             source="name"
                             label="שם המשחק"
@@ -152,8 +181,13 @@ function SimulatorLoaded({ data, onStart, onReset }) {
 
                         {uploading && (
                             <Box mt={2}>
-                                <Typography variant="body2" gutterBottom>{progress.step}</Typography>
-                                <LinearProgress variant="determinate" value={(progress.stepIndex / progress.total) * 100} />
+                                <Typography variant="body2" gutterBottom>
+                                    {progress.step}
+                                </Typography>
+                                <LinearProgress
+                                    variant="determinate"
+                                    value={(progress.stepIndex / progress.total) * 100}
+                                />
                             </Box>
                         )}
                         {status === 'done' && result && (
@@ -163,7 +197,9 @@ function SimulatorLoaded({ data, onStart, onReset }) {
                             </Alert>
                         )}
                         {status === 'error' && (
-                            <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>
+                            <Alert severity="error" sx={{ mt: 2 }}>
+                                {error}
+                            </Alert>
                         )}
 
                         <SaveButton
@@ -241,7 +277,9 @@ export default function StorySimulatorPage() {
                     error={loadStatus === 'error' ? loadError : null}
                 />
             )}
-            {stage === 'loaded' && <SimulatorLoaded data={data} onStart={() => setStage('playing')} onReset={handleReset} />}
+            {stage === 'loaded' && (
+                <SimulatorLoaded data={data} onStart={() => setStage('playing')} onReset={handleReset} />
+            )}
             {stage === 'playing' && (
                 <StorySimulatorGame
                     nodes={data.nodes}

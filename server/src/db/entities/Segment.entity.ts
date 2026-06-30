@@ -1,5 +1,12 @@
 import {
-  Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn,
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { CrudValidationGroups } from '@dataui/crud';
 import { IsNotEmpty, MaxLength } from '@shared/utils/validation/class-validator-he';
