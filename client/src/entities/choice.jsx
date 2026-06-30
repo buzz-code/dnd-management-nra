@@ -16,7 +16,7 @@ const Datagrid = ({ isAdmin, ...props }) => (
         {isAdmin && <TextField source="id" />}
         {isAdmin && <ReferenceField source="userId" reference="user" />}
         <ReferenceField source="gameId" reference="game" />
-        <ReferenceField source="nodeId" reference="node" />
+        <ReferenceField source="nodeId" reference="game_node" />
         <NumberField source="inputKey" />
         <TextField source="description" />
         {isAdmin && <DateField showDate showTime source="createdAt" />}
@@ -28,7 +28,7 @@ const Inputs = ({ isCreate, isAdmin }) => (
     <>
         {isAdmin && <CommonReferenceInput source="userId" reference="user" />}
         <CommonReferenceInput source="gameId" reference="game" />
-        <CommonReferenceInput source="nodeId" reference="node" validate={required()} />
+        <CommonReferenceInput source="nodeId" reference="game_node" validate={required()} />
         <NumberInput source="inputKey" validate={[required(), number()]} />
         <TextInput source="description" />
         {!isCreate && isAdmin && <DateTimeInput source="createdAt" disabled />}

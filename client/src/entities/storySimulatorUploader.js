@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useDataProvider } from 'react-admin';
 
-const GAME_SCOPED_CHILD_RESOURCES = ['routing_rule', 'choice', 'node', 'segment'];
+const GAME_SCOPED_CHILD_RESOURCES = ['routing_rule', 'choice', 'game_node', 'segment'];
 
 function computeNodeType(node, startNodeId) {
     if (node.nodeId === startNodeId) return 'start';
@@ -97,7 +97,7 @@ export function useStoryUploader({ nodes, segments, startNodeId }) {
                 layerId: layerIdMap[String(n.level)] ?? null,
                 nodeType: computeNodeType(n, startNodeId),
             }));
-            const createdNodes = nodePayloads.length ? await dataProvider.createMany('node', nodePayloads) : [];
+            const createdNodes = nodePayloads.length ? await dataProvider.createMany('game_node', nodePayloads) : [];
             const nodeIdMap = Object.fromEntries(createdNodes.map(n => [n.name, n.id]));
 
             setProgress({ step: 'יוצר בחירות', stepIndex: 5, total: 6 });

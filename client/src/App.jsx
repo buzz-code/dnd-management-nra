@@ -50,7 +50,7 @@ const App = () => (
                 <Resource name="game" {...game} options={{ menuGroup: 'content' }} icon={SportsEsportsIcon} />
                 <Resource name="segment" {...segment} options={{ menuGroup: 'content' }} icon={VolumeUpIcon} />
                 <Resource name="layer" {...layer} options={{ menuGroup: 'structure' }} icon={LayersIcon} />
-                <Resource name="node" {...gameNode} options={{ menuGroup: 'structure' }} icon={AccountTreeIcon} />
+                <Resource name="game_node" {...gameNode} options={{ menuGroup: 'structure' }} icon={AccountTreeIcon} />
                 <Resource name="choice" {...choice} options={{ menuGroup: 'structure' }} icon={TouchAppIcon} />
                 <Resource name="routing_rule" {...routingRule} options={{ menuGroup: 'structure' }} icon={AltRouteIcon} />
 

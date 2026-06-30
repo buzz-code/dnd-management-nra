@@ -18,7 +18,7 @@ registerEntityNameMap({
   game: 'משחקים',
   segment: 'קטעים',
   layer: 'שכבות',
-  node: 'צמתים',
+  game_node: 'צמתים',
   choice: 'בחירות',
   routing_rule: 'כללי ניתוב',
 });
