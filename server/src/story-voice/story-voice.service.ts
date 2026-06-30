@@ -10,10 +10,10 @@ import { InjectEntityRepository } from '@shared/base-entity/interface';
 import { MailSendService } from '@shared/utils/mail/mail-send.service';
 import { getAsNumber } from '@shared/utils/queryParam.util';
 import { generateCommonFileResponse } from '@shared/utils/report/report.util';
+import { BufferToMp3ReportGenerator } from '@shared/utils/report/buffer-to-mp3.generator';
 import { User } from 'src/db/entities/User.entity';
 import { StoryVoice, StoryVoiceStatus } from 'src/db/entities/StoryVoice.entity';
 import { ElevenLabsService } from './eleven-labs.service';
-import { AudioBufferReportGenerator } from './audio-buffer.generator';
 
 export class StoryVoiceService extends BaseEntityService<StoryVoice> {
   constructor(
@@ -92,8 +92,8 @@ export class StoryVoiceService extends BaseEntityService<StoryVoice> {
     }
     const buffer = await fs.readFile(entity.filePath);
     return generateCommonFileResponse(
-      new AudioBufferReportGenerator(() => entity.name),
-      { buffer },
+      new BufferToMp3ReportGenerator(() => entity.name),
+      buffer,
       this.dataSource,
     );
   }
