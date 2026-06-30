@@ -1,8 +1,7 @@
-import { useMemo, useRef, useState } from 'react';
-import { Title, useDataProvider, useNotify } from 'react-admin';
+import { useMemo, useState } from 'react';
+import { Form, SaveButton, SelectInput, TextInput, Title, required, useDataProvider, useNotify } from 'react-admin';
 import {
-    Alert, Box, Button, Card, CardContent, Chip, CircularProgress, Divider,
-    MenuItem, Stack, TextField, Typography,
+    Alert, Box, Button, Card, CardContent, Chip, CircularProgress, Divider, Stack, TextField, Typography,
 } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import GraphicEqIcon from '@mui/icons-material/GraphicEq';
@@ -23,17 +22,117 @@ function parseSegments(text) {
     return parsed;
 }
 
+function JsonInputStage({ jsonText, onParse, parseError }) {
+    return (
+        <>
+            <TextField
+                label="JSON של מקטעים"
+                value={jsonText}
+                onChange={e => onParse(e.target.value)}
+                multiline
+                minRows={8}
+                fullWidth
+                placeholder='[{"segment_id": 1, "character": "narrator", "text": "..."}]'
+                sx={{ mb: 1, direction: 'ltr' }}
+            />
+            <Button startIcon={<UploadFileIcon />} component="label" size="small">
+                טען קובץ JSON
+                <input type="file" accept=".json" hidden onChange={e => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = () => onParse(String(reader.result));
+                    reader.readAsText(file);
+                    e.target.value = null;
+                }} />
+            </Button>
+            {parseError && <Alert severity="error" sx={{ mt: 2 }}>{parseError}</Alert>}
+        </>
+    );
+}
+
+function GenerateForm({ segments, characters, onSubmit, generating }) {
+    const defaultValues = useMemo(() => ({
+        name: '',
+        modelId: DEFAULT_ELEVEN_LABS_MODEL,
+        characterVoices: Object.fromEntries(characters.map(c => [c, ''])),
+    }), [characters]);
+
+    return (
+        <Form key={characters.join(',')} onSubmit={onSubmit} defaultValues={defaultValues}>
+            <Divider sx={{ my: 2 }} />
+            <Stack direction="row" spacing={1} mb={2}>
+                <Chip label={`${segments.length} מקטעים`} color="primary" />
+                <Chip label={`${characters.length} דמויות`} color="secondary" />
+            </Stack>
+
+            <TextInput source="name" label="שם ההקראה" validate={required()} fullWidth />
+
+            <SelectInput
+                source="modelId"
+                label="מודל ElevenLabs"
+                choices={ELEVEN_LABS_MODELS}
+                validate={required()}
+                fullWidth
+            />
+
+            <Typography variant="subtitle2" gutterBottom>בחירת קול לכל דמות</Typography>
+            {characters.map(character => (
+                <TextInput
+                    key={character}
+                    source={`characterVoices.${character}`}
+                    label={`Voice ID עבור "${character}"`}
+                    validate={required()}
+                    fullWidth
+                    sx={{ direction: 'ltr' }}
+                />
+            ))}
+
+            <SaveButton
+                label="צור הקראה קולית"
+                icon={generating ? <CircularProgress size={18} /> : <GraphicEqIcon />}
+                alwaysEnable
+                disabled={generating}
+                variant="contained"
+                size="large"
+                fullWidth
+            />
+        </Form>
+    );
+}
+
+function GenerationResult({ result, downloading, onDownload }) {
+    if (!result) return null;
+    return (
+        <Box mt={2}>
+            {result.status === 'completed' && (
+                <Alert severity="success" sx={{ mb: 1 }}>ההקראה נוצרה בהצלחה</Alert>
+            )}
+            {result.status === 'failed' && (
+                <Alert severity="error" sx={{ mb: 1 }}>{result.errorMessage || 'יצירת השמע נכשלה'}</Alert>
+            )}
+            {result.status === 'completed' && (
+                <Button
+                    variant="outlined"
+                    fullWidth
+                    disabled={downloading}
+                    startIcon={downloading ? <CircularProgress size={18} /> : <DownloadIcon />}
+                    onClick={onDownload}
+                >
+                    הורד קובץ שמע
+                </Button>
+            )}
+        </Box>
+    );
+}
+
 export default function StoryVoiceGenerator() {
     const dataProvider = useDataProvider();
     const notify = useNotify();
-    const fileInputRef = useRef();
 
-    const [name, setName] = useState('');
     const [jsonText, setJsonText] = useState('');
     const [parseError, setParseError] = useState(null);
     const [segments, setSegments] = useState(null);
-    const [characterVoices, setCharacterVoices] = useState({});
-    const [modelId, setModelId] = useState(DEFAULT_ELEVEN_LABS_MODEL);
     const [generating, setGenerating] = useState(false);
     const [result, setResult] = useState(null);
     const [downloading, setDownloading] = useState(false);
@@ -47,33 +146,15 @@ export default function StoryVoiceGenerator() {
         setJsonText(text);
         setResult(null);
         try {
-            const parsed = parseSegments(text);
-            setSegments(parsed);
+            setSegments(parseSegments(text));
             setParseError(null);
-            const nextVoices = {};
-            [...new Set(parsed.map(s => s.character))].forEach(c => {
-                nextVoices[c] = characterVoices[c] ?? '';
-            });
-            setCharacterVoices(nextVoices);
         } catch (err) {
             setSegments(null);
             setParseError(err.message || 'שגיאה בפענוח ה-JSON');
         }
     }
 
-    function handleFileSelect(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = () => handleParse(String(reader.result));
-        reader.readAsText(file);
-        e.target.value = null;
-    }
-
-    const missingVoices = characters.filter(c => !characterVoices[c]);
-    const canGenerate = !!name && !!segments && !missingVoices.length && !generating;
-
-    async function handleGenerate() {
+    async function handleGenerate({ name, modelId, characterVoices }) {
         setGenerating(true);
         setResult(null);
         try {
@@ -110,100 +191,18 @@ export default function StoryVoiceGenerator() {
                 <CardContent>
                     <Typography variant="h5" gutterBottom>יצירת הקראה קולית (ElevenLabs)</Typography>
 
-                    <TextField
-                        label="שם ההקראה"
-                        value={name}
-                        onChange={e => setName(e.target.value)}
-                        fullWidth
-                        sx={{ mb: 2 }}
-                    />
-
-                    <TextField
-                        label="JSON של מקטעים"
-                        value={jsonText}
-                        onChange={e => handleParse(e.target.value)}
-                        multiline
-                        minRows={8}
-                        fullWidth
-                        placeholder='[{"segment_id": 1, "character": "narrator", "text": "..."}]'
-                        sx={{ mb: 1, direction: 'ltr' }}
-                    />
-                    <Button startIcon={<UploadFileIcon />} component="label" size="small">
-                        טען קובץ JSON
-                        <input type="file" accept=".json" hidden ref={fileInputRef} onChange={handleFileSelect} />
-                    </Button>
-
-                    {parseError && <Alert severity="error" sx={{ mt: 2 }}>{parseError}</Alert>}
+                    <JsonInputStage jsonText={jsonText} onParse={handleParse} parseError={parseError} />
 
                     {segments && (
-                        <>
-                            <Divider sx={{ my: 2 }} />
-                            <Stack direction="row" spacing={1} mb={2}>
-                                <Chip label={`${segments.length} מקטעים`} color="primary" />
-                                <Chip label={`${characters.length} דמויות`} color="secondary" />
-                            </Stack>
-
-                            <TextField
-                                select
-                                label="מודל ElevenLabs"
-                                value={modelId}
-                                onChange={e => setModelId(e.target.value)}
-                                fullWidth
-                                sx={{ mb: 2 }}
-                            >
-                                {ELEVEN_LABS_MODELS.map(m => (
-                                    <MenuItem key={m.id} value={m.id}>{m.name}</MenuItem>
-                                ))}
-                            </TextField>
-
-                            <Typography variant="subtitle2" gutterBottom>בחירת קול לכל דמות</Typography>
-                            <Stack spacing={2} mb={2}>
-                                {characters.map(character => (
-                                    <TextField
-                                        key={character}
-                                        label={`Voice ID עבור "${character}"`}
-                                        value={characterVoices[character] || ''}
-                                        onChange={e => setCharacterVoices(prev => ({ ...prev, [character]: e.target.value }))}
-                                        fullWidth
-                                        sx={{ direction: 'ltr' }}
-                                    />
-                                ))}
-                            </Stack>
-
-                            <Button
-                                variant="contained"
-                                size="large"
-                                fullWidth
-                                disabled={!canGenerate}
-                                startIcon={generating ? <CircularProgress size={18} /> : <GraphicEqIcon />}
-                                onClick={handleGenerate}
-                            >
-                                צור הקראה קולית
-                            </Button>
-                        </>
+                        <GenerateForm
+                            segments={segments}
+                            characters={characters}
+                            onSubmit={handleGenerate}
+                            generating={generating}
+                        />
                     )}
 
-                    {result && (
-                        <Box mt={2}>
-                            {result.status === 'completed' && (
-                                <Alert severity="success" sx={{ mb: 1 }}>ההקראה נוצרה בהצלחה</Alert>
-                            )}
-                            {result.status === 'failed' && (
-                                <Alert severity="error" sx={{ mb: 1 }}>{result.errorMessage || 'יצירת השמע נכשלה'}</Alert>
-                            )}
-                            {result.status === 'completed' && (
-                                <Button
-                                    variant="outlined"
-                                    fullWidth
-                                    disabled={downloading}
-                                    startIcon={downloading ? <CircularProgress size={18} /> : <DownloadIcon />}
-                                    onClick={handleDownload}
-                                >
-                                    הורד קובץ שמע
-                                </Button>
-                            )}
-                        </Box>
-                    )}
+                    <GenerationResult result={result} downloading={downloading} onDownload={handleDownload} />
                 </CardContent>
             </Card>
         </Box>
