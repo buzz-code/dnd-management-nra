@@ -55,14 +55,29 @@ const App = () => (
                 <Resource name="layer" {...layer} options={{ menuGroup: 'structure' }} icon={LayersIcon} />
                 <Resource name="game_node" {...gameNode} options={{ menuGroup: 'structure' }} icon={AccountTreeIcon} />
                 <Resource name="choice" {...choice} options={{ menuGroup: 'structure' }} icon={TouchAppIcon} />
-                <Resource name="routing_rule" {...routingRule} options={{ menuGroup: 'structure' }} icon={AltRouteIcon} />
+                <Resource
+                    name="routing_rule"
+                    {...routingRule}
+                    options={{ menuGroup: 'structure' }}
+                    icon={AltRouteIcon}
+                />
                 <Resource name="story_voice" {...storyVoice} options={{ menuGroup: 'content' }} icon={GraphicEqIcon} />
 
                 {CommonSettingsResources()}
                 {isPhoneCampaign(permissions) && (
                     <>
-                        <Resource name="phone_template" {...phoneTemplate} options={{ menuGroup: 'phone' }} icon={PhoneIcon} />
-                        <Resource name="phone_campaign" {...phoneCampaign} options={{ menuGroup: 'phone' }} icon={PhoneIcon} />
+                        <Resource
+                            name="phone_template"
+                            {...phoneTemplate}
+                            options={{ menuGroup: 'phone' }}
+                            icon={PhoneIcon}
+                        />
+                        <Resource
+                            name="phone_campaign"
+                            {...phoneCampaign}
+                            options={{ menuGroup: 'phone' }}
+                            icon={PhoneIcon}
+                        />
                     </>
                 )}
                 {CommonAdminResources({ permissions })}

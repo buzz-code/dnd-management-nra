@@ -15,7 +15,12 @@ import BaseDashboard from '@shared/components/views/Dashboard';
 import { useDashboardItems } from './settings/settingsUtil';
 
 const customMenuItems = [
-    <MenuItemLink key="story-simulator" to="/story-simulator" primaryText="סימולטור סיפור" leftIcon={<AutoStoriesIcon />} />,
+    <MenuItemLink
+        key="story-simulator"
+        to="/story-simulator"
+        primaryText="סימולטור סיפור"
+        leftIcon={<AutoStoriesIcon />}
+    />,
     <MenuItemLink key="story-voice" to="/story-voice" primaryText="הקראה קולית" leftIcon={<GraphicEqIcon />} />,
     <MenuItemLink key="tutorial" to="/tutorial" primaryText="מדריך למשתמש" leftIcon={<HelpIcon />} />,
     <MenuItemLink key="pages-view" to="/pages-view" primaryText="הסברים נוספים" leftIcon={<ImportContactsIcon />} />,

@@ -1,7 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import {
-    Box, Button, Chip, Divider, IconButton, Paper, Stack, Tooltip, Typography,
-} from '@mui/material';
+import { Box, Button, Chip, Divider, IconButton, Paper, Stack, Tooltip, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CasinoIcon from '@mui/icons-material/Casino';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
@@ -32,7 +30,11 @@ function NarratorBubble({ title, text, dimmed }) {
                         {title}
                     </Typography>
                 )}
-                <Typography variant="body2" component="pre" sx={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', lineHeight: 1.7 }}>
+                <Typography
+                    variant="body2"
+                    component="pre"
+                    sx={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', lineHeight: 1.7 }}
+                >
                     {text || '(אין טקסט)'}
                 </Typography>
             </Paper>
@@ -53,7 +55,9 @@ function PlayerBubble({ text }) {
                     borderRadius: '16px 4px 16px 16px',
                 }}
             >
-                <Typography variant="body2" sx={{ fontWeight: 500 }}>{text}</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                    {text}
+                </Typography>
             </Paper>
         </Box>
     );
@@ -74,13 +78,13 @@ function InteractionPanel({ node, onChoice, onDiceNavigate, onAutoAdvance, onRes
         setPendingChoiceText(null);
     }, [node.id]);
 
-    const diceRules = node.routingRules.filter(r => r.diceOptions !== 'NULL');
+    const diceRules = node.routingRules.filter((r) => r.diceOptions !== 'NULL');
     const hasDice = diceRules.length > 0;
     // All dice rules are tied to a player choice → choice picks the path, dice picks the variant
-    const isChoiceThenDice = hasDice && node.choices.length > 0 && diceRules.every(r => r.key !== null);
+    const isChoiceThenDice = hasDice && node.choices.length > 0 && diceRules.every((r) => r.key !== null);
     const isPureDice = hasDice && !isChoiceThenDice;
     const isPureChoice = !hasDice && node.choices.length > 0;
-    const hasAutoOnly = !hasDice && node.choices.length === 0 && node.routingRules.some(r => r.key === null);
+    const hasAutoOnly = !hasDice && node.choices.length === 0 && node.routingRules.some((r) => r.key === null);
     const isEnd = node.routingRules.length === 0;
 
     function rollDiceForChoice(choiceKey, choiceText) {
@@ -102,8 +106,12 @@ function InteractionPanel({ node, onChoice, onDiceNavigate, onAutoAdvance, onRes
     if (isEnd) {
         return (
             <Box textAlign="center" py={3}>
-                <Typography variant="h6" color="text.secondary">סוף הסיפור</Typography>
-                <Button onClick={onRestart} startIcon={<RestartAltIcon />} sx={{ mt: 1 }}>שחק שוב</Button>
+                <Typography variant="h6" color="text.secondary">
+                    סוף הסיפור
+                </Typography>
+                <Button onClick={onRestart} startIcon={<RestartAltIcon />} sx={{ mt: 1 }}>
+                    שחק שוב
+                </Button>
             </Box>
         );
     }
@@ -113,7 +121,7 @@ function InteractionPanel({ node, onChoice, onDiceNavigate, onAutoAdvance, onRes
         if (diceRoll == null) {
             return (
                 <Stack direction="row" flexWrap="wrap" gap={1} justifyContent="flex-end">
-                    {node.choices.map(choice => (
+                    {node.choices.map((choice) => (
                         <Button
                             key={choice.key}
                             variant="outlined"
@@ -130,17 +138,35 @@ function InteractionPanel({ node, onChoice, onDiceNavigate, onAutoAdvance, onRes
         // After choice + auto-roll: show result
         return (
             <Stack spacing={1} alignItems="flex-end">
-                <Typography variant="body2" color="text.secondary">בחרת: {pendingChoiceText}</Typography>
+                <Typography variant="body2" color="text.secondary">
+                    בחרת: {pendingChoiceText}
+                </Typography>
                 <Paper variant="outlined" sx={{ p: 2, textAlign: 'center', minWidth: 160 }}>
                     <Typography variant="h3">{DICE_FACE[diceRoll]}</Typography>
                     <Typography variant="body2">גלגול קובייה: {diceRoll}</Typography>
-                    {!diceTarget && <Typography color="error" variant="caption">לא נמצא יעד לשילוב זה</Typography>}
+                    {!diceTarget && (
+                        <Typography color="error" variant="caption">
+                            לא נמצא יעד לשילוב זה
+                        </Typography>
+                    )}
                 </Paper>
                 <Stack direction="row" spacing={1}>
-                    <Button size="small" onClick={() => { setDiceRoll(null); setDiceTarget(null); }}>חזור לבחירות</Button>
+                    <Button
+                        size="small"
+                        onClick={() => {
+                            setDiceRoll(null);
+                            setDiceTarget(null);
+                        }}
+                    >
+                        חזור לבחירות
+                    </Button>
                     {diceTarget && (
-                        <Button variant="contained" startIcon={<PlayArrowIcon />}
-                            onClick={() => onDiceNavigate(diceRoll, diceTarget, pendingChoiceText)} sx={{ borderRadius: 4 }}>
+                        <Button
+                            variant="contained"
+                            startIcon={<PlayArrowIcon />}
+                            onClick={() => onDiceNavigate(diceRoll, diceTarget, pendingChoiceText)}
+                            sx={{ borderRadius: 4 }}
+                        >
                             המשך
                         </Button>
                     )}
@@ -153,7 +179,7 @@ function InteractionPanel({ node, onChoice, onDiceNavigate, onAutoAdvance, onRes
     if (isPureChoice) {
         return (
             <Stack direction="row" flexWrap="wrap" gap={1} justifyContent="flex-end">
-                {node.choices.map(choice => (
+                {node.choices.map((choice) => (
                     <Button
                         key={choice.key}
                         variant="outlined"
@@ -173,7 +199,13 @@ function InteractionPanel({ node, onChoice, onDiceNavigate, onAutoAdvance, onRes
         return (
             <Stack spacing={1} alignItems="flex-end">
                 {diceRoll == null ? (
-                    <Button variant="contained" color="secondary" startIcon={<CasinoIcon />} onClick={handlePureDiceRoll} sx={{ borderRadius: 4 }}>
+                    <Button
+                        variant="contained"
+                        color="secondary"
+                        startIcon={<CasinoIcon />}
+                        onClick={handlePureDiceRoll}
+                        sx={{ borderRadius: 4 }}
+                    >
                         גלגל קובייה
                     </Button>
                 ) : (
@@ -181,12 +213,29 @@ function InteractionPanel({ node, onChoice, onDiceNavigate, onAutoAdvance, onRes
                         <Paper variant="outlined" sx={{ p: 2, textAlign: 'center', minWidth: 160 }}>
                             <Typography variant="h3">{DICE_FACE[diceRoll]}</Typography>
                             <Typography variant="body2">הטלת {diceRoll}</Typography>
-                            {!diceTarget && <Typography color="error" variant="caption">לא נמצא יעד לתוצאה זו</Typography>}
+                            {!diceTarget && (
+                                <Typography color="error" variant="caption">
+                                    לא נמצא יעד לתוצאה זו
+                                </Typography>
+                            )}
                         </Paper>
                         <Stack direction="row" spacing={1}>
-                            <Button size="small" onClick={() => { setDiceRoll(null); setDiceTarget(null); }}>הטל שוב</Button>
+                            <Button
+                                size="small"
+                                onClick={() => {
+                                    setDiceRoll(null);
+                                    setDiceTarget(null);
+                                }}
+                            >
+                                הטל שוב
+                            </Button>
                             {diceTarget && (
-                                <Button variant="contained" startIcon={<PlayArrowIcon />} onClick={() => onDiceNavigate(diceRoll, diceTarget, null)} sx={{ borderRadius: 4 }}>
+                                <Button
+                                    variant="contained"
+                                    startIcon={<PlayArrowIcon />}
+                                    onClick={() => onDiceNavigate(diceRoll, diceTarget, null)}
+                                    sx={{ borderRadius: 4 }}
+                                >
                                     המשך
                                 </Button>
                             )}
@@ -200,7 +249,12 @@ function InteractionPanel({ node, onChoice, onDiceNavigate, onAutoAdvance, onRes
     if (hasAutoOnly) {
         return (
             <Stack direction="row" justifyContent="flex-end">
-                <Button variant="contained" startIcon={<PlayArrowIcon />} onClick={onAutoAdvance} sx={{ borderRadius: 4 }}>
+                <Button
+                    variant="contained"
+                    startIcon={<PlayArrowIcon />}
+                    onClick={onAutoAdvance}
+                    sx={{ borderRadius: 4 }}
+                >
                     המשך →
                 </Button>
             </Stack>
@@ -240,20 +294,20 @@ export default function StorySimulatorGame({ nodes, segments, startNodeId, onRes
 
     function navigate(targetNodeId, playerBubbleText) {
         if (!targetNodeId || !nodes[targetNodeId]) return;
-        setChatHistory(h => [
+        setChatHistory((h) => [
             ...h,
             { type: 'narrator', title: segment?.title, text: segment?.text },
             { type: 'player', text: playerBubbleText },
         ]);
-        setNodeHistory(h => [...h, currentNodeId]);
+        setNodeHistory((h) => [...h, currentNodeId]);
         setCurrentNodeId(targetNodeId);
     }
 
     function handleBack() {
         if (!nodeHistory.length) return;
         const prevNodeId = nodeHistory[nodeHistory.length - 1];
-        setNodeHistory(h => h.slice(0, -1));
-        setChatHistory(h => h.slice(0, -2)); // remove last narrator + player bubble
+        setNodeHistory((h) => h.slice(0, -1));
+        setChatHistory((h) => h.slice(0, -2)); // remove last narrator + player bubble
         setCurrentNodeId(prevNodeId);
     }
 
@@ -270,7 +324,7 @@ export default function StorySimulatorGame({ nodes, segments, startNodeId, onRes
     }
 
     function handleAutoAdvance() {
-        const autoRule = node.routingRules.find(r => r.key === null && r.diceOptions === 'NULL');
+        const autoRule = node.routingRules.find((r) => r.key === null && r.diceOptions === 'NULL');
         if (autoRule) navigate(autoRule.targetNodeId, '→');
     }
 
@@ -278,7 +332,9 @@ export default function StorySimulatorGame({ nodes, segments, startNodeId, onRes
         return (
             <Box p={3} dir="rtl">
                 <Typography color="error">צומת לא נמצא: {currentNodeId}</Typography>
-                <Button onClick={onReset} startIcon={<RestartAltIcon />} sx={{ mt: 2 }}>חזור להתחלה</Button>
+                <Button onClick={onReset} startIcon={<RestartAltIcon />} sx={{ mt: 2 }}>
+                    חזור להתחלה
+                </Button>
             </Box>
         );
     }
@@ -321,9 +377,11 @@ export default function StorySimulatorGame({ nodes, segments, startNodeId, onRes
             {chatHistory.length > 0 && (
                 <Stack spacing={1.5} mb={2}>
                     {chatHistory.map((item, i) =>
-                        item.type === 'narrator'
-                            ? <NarratorBubble key={i} title={item.title} text={item.text} dimmed />
-                            : <PlayerBubble key={i} text={item.text} />
+                        item.type === 'narrator' ? (
+                            <NarratorBubble key={i} title={item.title} text={item.text} dimmed />
+                        ) : (
+                            <PlayerBubble key={i} text={item.text} />
+                        ),
                     )}
                     <Divider sx={{ my: 1 }} />
                 </Stack>

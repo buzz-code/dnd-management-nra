@@ -1,4 +1,16 @@
-import { TextField, TextInput, BooleanField, BooleanInput, DateField, DateTimeInput, ReferenceField, Button, useRecordContext, required, maxLength } from 'react-admin';
+import {
+    TextField,
+    TextInput,
+    BooleanField,
+    BooleanInput,
+    DateField,
+    DateTimeInput,
+    ReferenceField,
+    Button,
+    useRecordContext,
+    required,
+    maxLength,
+} from 'react-admin';
 import { Link } from 'react-router-dom';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { CommonDatagrid } from '@shared/components/crudContainers/CommonList';
@@ -6,10 +18,7 @@ import { getResourceComponents } from '@shared/components/crudContainers/CommonE
 import CommonReferenceInput from '@shared/components/fields/CommonReferenceInput';
 import { adminUserFilter } from '@shared/components/fields/PermissionFilter';
 
-const filters = [
-    adminUserFilter,
-    <TextInput source="name:$cont" alwaysOn />,
-];
+const filters = [adminUserFilter, <TextInput source="name:$cont" alwaysOn />];
 
 const PlayGameButton = () => {
     const record = useRecordContext();
@@ -20,7 +29,7 @@ const PlayGameButton = () => {
             startIcon={<PlayArrowIcon />}
             component={Link}
             to={{ pathname: '/story-simulator', search: `gameId=${record.id}` }}
-            onClick={e => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
         />
     );
 };

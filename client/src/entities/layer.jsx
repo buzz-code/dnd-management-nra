@@ -5,11 +5,7 @@ import { getResourceComponents } from '@shared/components/crudContainers/CommonE
 import CommonReferenceInput from '@shared/components/fields/CommonReferenceInput';
 import { adminUserFilter } from '@shared/components/fields/PermissionFilter';
 
-const filters = [
-    adminUserFilter,
-    <TextInput source="name:$cont" alwaysOn />,
-    <TextInput source="layerType:$cont" />,
-];
+const filters = [adminUserFilter, <TextInput source="name:$cont" alwaysOn />, <TextInput source="layerType:$cont" />];
 
 const Datagrid = ({ isAdmin, ...props }) => (
     <CommonDatagrid {...props}>

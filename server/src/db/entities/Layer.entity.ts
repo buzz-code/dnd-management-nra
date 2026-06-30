@@ -1,6 +1,4 @@
-import {
-  Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn, Index,
-} from 'typeorm';
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn, Index } from 'typeorm';
 import { CrudValidationGroups } from '@dataui/crud';
 import { IsNotEmpty, MaxLength } from '@shared/utils/validation/class-validator-he';
 import { StringType } from '@shared/utils/entity/class-transformer';

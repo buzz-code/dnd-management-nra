@@ -1,4 +1,9 @@
-const GAME_CHILD_RESOURCES = { nodes: 'game_node', segments: 'segment', choices: 'choice', routingRules: 'routing_rule' };
+const GAME_CHILD_RESOURCES = {
+    nodes: 'game_node',
+    segments: 'segment',
+    choices: 'choice',
+    routingRules: 'routing_rule',
+};
 
 /**
  * Fetches all rows of a Game's child resources (nodes, segments, choices, routing rules)
@@ -14,7 +19,7 @@ export async function fetchGameChildRows(dataProvider, gameId) {
                 sort: { field: 'id', order: 'ASC' },
             });
             return [key, data];
-        })
+        }),
     );
     return Object.fromEntries(entries);
 }

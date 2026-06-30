@@ -22,14 +22,7 @@ export function DashboardItemsInput() {
                         <TextInput source="title" fullWidth />
                         <CommonEntityNameInput
                             source="resource"
-                            allowedEntities={[
-                                'game',
-                                'segment',
-                                'layer',
-                                'node',
-                                'choice',
-                                'routing_rule',
-                            ]}
+                            allowedEntities={['game', 'segment', 'layer', 'node', 'choice', 'routing_rule']}
                             helperText="בחר את מקור הנתונים שברצונך להציג"
                             fullWidth
                             validate={required()}
