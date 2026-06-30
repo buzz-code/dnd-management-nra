@@ -1,4 +1,6 @@
-import { TextField, TextInput, BooleanField, BooleanInput, DateField, DateTimeInput, ReferenceField, required, maxLength } from 'react-admin';
+import { TextField, TextInput, BooleanField, BooleanInput, DateField, DateTimeInput, ReferenceField, Button, useRecordContext, required, maxLength } from 'react-admin';
+import { Link } from 'react-router-dom';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { CommonDatagrid } from '@shared/components/crudContainers/CommonList';
 import { getResourceComponents } from '@shared/components/crudContainers/CommonEntity';
 import CommonReferenceInput from '@shared/components/fields/CommonReferenceInput';
@@ -9,6 +11,20 @@ const filters = [
     <TextInput source="name:$cont" alwaysOn />,
 ];
 
+const PlayGameButton = () => {
+    const record = useRecordContext();
+    if (!record) return null;
+    return (
+        <Button
+            label="שחק"
+            startIcon={<PlayArrowIcon />}
+            component={Link}
+            to={{ pathname: '/story-simulator', search: `gameId=${record.id}` }}
+            onClick={e => e.stopPropagation()}
+        />
+    );
+};
+
 const Datagrid = ({ isAdmin, ...props }) => (
     <CommonDatagrid {...props}>
         {isAdmin && <TextField source="id" />}
@@ -17,6 +33,7 @@ const Datagrid = ({ isAdmin, ...props }) => (
         <BooleanField source="isActive" />
         {isAdmin && <DateField showDate showTime source="createdAt" />}
         {isAdmin && <DateField showDate showTime source="updatedAt" />}
+        <PlayGameButton />
     </CommonDatagrid>
 );
 

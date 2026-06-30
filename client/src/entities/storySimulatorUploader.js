@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { useDataProvider } from 'react-admin';
-
-const GAME_SCOPED_CHILD_RESOURCES = ['routing_rule', 'choice', 'game_node', 'segment'];
+import { fetchGameChildRows } from './storySimulatorGameData';
 
 function computeNodeType(node, startNodeId) {
-    if (node.nodeId === startNodeId) return 'start';
+    if (node.id === startNodeId) return 'start';
     if (node.type === 'SYSTEM_NODE') return 'system';
     if (node.routingRules.length === 0) return 'end';
     return null;
@@ -14,7 +13,8 @@ function computeNodeType(node, startNodeId) {
  * Uploads a parsed story (nodes + segments) to the server as a Game graph.
  *
  * - If `existingGameId` is passed, the game's existing segments/nodes/choices/
- *   routing_rules are deleted first, then recreated under the same gameId.
+ *   routing_rules are deleted first, then recreated under the same gameId;
+ *   the game's `name` is also updated to `gameName`.
  * - `Layer` has no gameId column (it's a shared resource), so layers are
  *   found-or-created by name instead of being deleted/recreated.
  * - When `assignUserId` is passed (admin only), it's stamped on every created
@@ -29,14 +29,17 @@ export function useStoryUploader({ nodes, segments, startNodeId }) {
     const [error, setError] = useState(null);
 
     async function deleteExistingGameData(gameId) {
-        for (const resource of GAME_SCOPED_CHILD_RESOURCES) {
-            const { data } = await dataProvider.getList(resource, {
-                filter: { gameId },
-                pagination: { page: 1, perPage: 10000 },
-                sort: { field: 'id', order: 'ASC' },
-            });
-            if (data.length) {
-                await dataProvider.deleteMany(resource, { ids: data.map(r => r.id) });
+        const { routingRules, choices, nodes: nodeRows, segments: segmentRows } = await fetchGameChildRows(dataProvider, gameId);
+        // Delete in FK dependency order: routing_rules/choices reference game_node, which references segment.
+        const deletions = [
+            ['routing_rule', routingRules],
+            ['choice', choices],
+            ['game_node', nodeRows],
+            ['segment', segmentRows],
+        ];
+        for (const [resource, rows] of deletions) {
+            if (rows.length) {
+                await dataProvider.deleteMany(resource, { ids: rows.map(r => r.id) });
             }
         }
     }
@@ -60,7 +63,7 @@ export function useStoryUploader({ nodes, segments, startNodeId }) {
         return Object.fromEntries(levels.map(level => [String(level), existingByName[`רמה ${level}`] ?? createdByName[`רמה ${level}`]]));
     }
 
-    async function upload({ storyTitle, existingGameId, assignUserId }) {
+    async function upload({ gameName, existingGameId, assignUserId }) {
         setStatus('uploading');
         setError(null);
         setResult(null);
@@ -71,15 +74,16 @@ export function useStoryUploader({ nodes, segments, startNodeId }) {
             if (gameId) {
                 setProgress({ step: 'מוחק נתונים קודמים של המשחק', stepIndex: 1, total: 6 });
                 await deleteExistingGameData(gameId);
+                await dataProvider.update('game', { id: gameId, data: { name: gameName }, previousData: { id: gameId } });
             } else {
                 setProgress({ step: 'יוצר משחק', stepIndex: 1, total: 6 });
-                const [game] = await dataProvider.createMany('game', [withUser({ name: storyTitle })]);
+                const [game] = await dataProvider.createMany('game', [withUser({ name: gameName })]);
                 gameId = game.id;
             }
 
             setProgress({ step: 'יוצר מקטעים', stepIndex: 2, total: 6 });
             const segPayloads = Object.values(segments).map(s => withUser({
-                name: s.segmentId, gameId, title: s.title, value: s.text,
+                name: s.id, gameId, title: s.title, value: s.text,
             }));
             const createdSegs = segPayloads.length ? await dataProvider.createMany('segment', segPayloads) : [];
             const segIdMap = Object.fromEntries(createdSegs.map(s => [s.name, s.id]));
@@ -91,7 +95,7 @@ export function useStoryUploader({ nodes, segments, startNodeId }) {
             setProgress({ step: 'יוצר צמתים', stepIndex: 4, total: 6 });
             const nodeList = Object.values(nodes);
             const nodePayloads = nodeList.map(n => withUser({
-                name: n.nodeId,
+                name: n.id,
                 gameId,
                 segmentId: segIdMap[n.segmentId] ?? null,
                 layerId: layerIdMap[String(n.level)] ?? null,
@@ -105,8 +109,8 @@ export function useStoryUploader({ nodes, segments, startNodeId }) {
             const choiceKeys = [];
             nodeList.forEach(n => {
                 n.choices.forEach(c => {
-                    choiceKeys.push(`${n.nodeId}:${c.key}`);
-                    choicePayloads.push(withUser({ nodeId: nodeIdMap[n.nodeId], gameId, inputKey: c.key, description: c.text }));
+                    choiceKeys.push(`${n.id}:${c.key}`);
+                    choicePayloads.push(withUser({ nodeId: nodeIdMap[n.id], gameId, inputKey: c.key, description: c.text }));
                 });
             });
             const createdChoices = choicePayloads.length ? await dataProvider.createMany('choice', choicePayloads) : [];
@@ -119,10 +123,10 @@ export function useStoryUploader({ nodes, segments, startNodeId }) {
                     const targetId = nodeIdMap[r.targetNodeId];
                     if (!targetId) return; // unresolved target — skip rather than insert an invalid row
                     rulePayloads.push(withUser({
-                        sourceNodeId: nodeIdMap[n.nodeId],
+                        sourceNodeId: nodeIdMap[n.id],
                         targetNodeId: targetId,
                         gameId,
-                        choiceId: r.key != null ? (choiceIdMap[`${n.nodeId}:${r.key}`] ?? null) : null,
+                        choiceId: r.key != null ? (choiceIdMap[`${n.id}:${r.key}`] ?? null) : null,
                         diceOptions: r.diceOptions !== 'NULL' ? r.diceOptions : null,
                     }));
                 });

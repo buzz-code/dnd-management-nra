@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { Title, Form, SaveButton } from 'react-admin';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { Title, Form, SaveButton, TextInput, required, maxLength } from 'react-admin';
 import {
     Alert, Box, Button, Card, CardActions, CardContent, Chip,
     CircularProgress, Divider, LinearProgress, Stack, Typography,
@@ -12,24 +13,25 @@ import CommonReferenceInput from '@shared/components/fields/CommonReferenceInput
 import { parseStoryExcel } from './storySimulatorParser';
 import StorySimulatorGame from './StorySimulatorGame';
 import { useStoryUploader } from './storySimulatorUploader';
+import { useStoryLoader } from './storySimulatorLoader';
 
-// ─── Upload stage ─────────────────────────────────────────────────────────────
+// ─── Start stage ──────────────────────────────────────────────────────────────
 
-function SimulatorUpload({ onLoaded }) {
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+function SimulatorStart({ onFileLoaded, onPlay, loading, error }) {
+    const [fileLoading, setFileLoading] = useState(false);
+    const [fileError, setFileError] = useState(null);
 
     async function handleFile(e) {
         const file = e.target.files[0];
         if (!file) return;
-        setLoading(true);
-        setError(null);
+        setFileLoading(true);
+        setFileError(null);
         try {
-            onLoaded(await parseStoryExcel(file));
+            onFileLoaded(await parseStoryExcel(file));
         } catch (err) {
-            setError(err.message || 'שגיאה בפענוח הקובץ');
+            setFileError(err.message || 'שגיאה בפענוח הקובץ');
         } finally {
-            setLoading(false);
+            setFileLoading(false);
         }
     }
 
@@ -37,20 +39,42 @@ function SimulatorUpload({ onLoaded }) {
         <Box display="flex" alignItems="center" justifyContent="center" minHeight="60vh" dir="rtl">
             <Card sx={{ maxWidth: 480, width: '100%', textAlign: 'center', p: 4 }}>
                 <CardContent>
-                    <UploadFileIcon sx={{ fontSize: 64, color: 'primary.main', mb: 2 }} />
                     <Typography variant="h5" gutterBottom>סימולטור סיפור</Typography>
-                    <Typography variant="body2" color="text.secondary" mb={3}>
-                        בחר קובץ Excel של מפת הסיפור (.xlsx) כדי להתחיל
+
+                    <Form onSubmit={values => onPlay(values.gameId)} defaultValues={{ gameId: null }}>
+                        <CommonReferenceInput
+                            source="gameId"
+                            reference="game"
+                            label="בחר משחק שמור"
+                            validate={required()}
+                            disabled={loading}
+                            fullWidth
+                        />
+                        <SaveButton
+                            label="שחק"
+                            icon={loading ? <CircularProgress size={18} /> : <PlayArrowIcon />}
+                            disabled={loading}
+                            variant="contained"
+                            size="large"
+                            sx={{ width: '100%' }}
+                        />
+                        {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
+                    </Form>
+
+                    <Divider sx={{ my: 3 }}>או</Divider>
+
+                    <Typography variant="body2" color="text.secondary" mb={2}>
+                        בחר קובץ Excel של מפת הסיפור (.xlsx) כדי להעלות סיפור חדש
                     </Typography>
-                    {loading ? (
+                    {fileLoading ? (
                         <CircularProgress />
                     ) : (
-                        <Button variant="contained" size="large" component="label" startIcon={<UploadFileIcon />}>
+                        <Button variant="outlined" size="large" component="label" startIcon={<UploadFileIcon />}>
                             בחר קובץ
                             <input type="file" accept=".xlsx,.xls" hidden onChange={handleFile} />
                         </Button>
                     )}
-                    {error && <Typography color="error" mt={2} variant="body2">{error}</Typography>}
+                    {fileError && <Typography color="error" mt={2} variant="body2">{fileError}</Typography>}
                 </CardContent>
             </Card>
         </Box>
@@ -70,7 +94,7 @@ function SimulatorLoaded({ data, onStart, onReset }) {
 
     function handleUploadSubmit(values) {
         upload({
-            storyTitle,
+            gameName: values.name,
             existingGameId: values.gameId ?? null,
             assignUserId: values.userId ?? null,
         });
@@ -100,7 +124,14 @@ function SimulatorLoaded({ data, onStart, onReset }) {
                     <Divider sx={{ my: 2 }} />
                     <Typography variant="subtitle2" gutterBottom>העלאה לשרת</Typography>
 
-                    <Form onSubmit={handleUploadSubmit} defaultValues={{ gameId: null, userId: null }}>
+                    <Form onSubmit={handleUploadSubmit} defaultValues={{ name: storyTitle, gameId: null, userId: null }}>
+                        <TextInput
+                            source="name"
+                            label="שם המשחק"
+                            validate={[required(), maxLength(255)]}
+                            disabled={uploading}
+                            fullWidth
+                        />
                         <CommonReferenceInput
                             source="gameId"
                             reference="game"
@@ -169,23 +200,47 @@ function SimulatorLoaded({ data, onStart, onReset }) {
 // ─── Page root ────────────────────────────────────────────────────────────────
 
 export default function StorySimulatorPage() {
-    const [stage, setStage] = useState('upload'); // 'upload' | 'loaded' | 'playing'
+    const [stage, setStage] = useState('start'); // 'start' | 'loaded' | 'playing'
     const [data, setData] = useState(null);
+    const [searchParams] = useSearchParams();
+    const { load, status: loadStatus, error: loadError } = useStoryLoader();
 
-    function handleLoaded(parsed) {
+    function handleFileLoaded(parsed) {
         setData(parsed);
         setStage('loaded');
     }
 
+    async function handlePlay(gameId) {
+        if (!gameId) return;
+        const loaded = await load(gameId).catch(() => null);
+        if (loaded) {
+            setData(loaded);
+            setStage('playing');
+        }
+    }
+
     function handleReset() {
         setData(null);
-        setStage('upload');
+        setStage('start');
     }
+
+    useEffect(() => {
+        const gameId = searchParams.get('gameId');
+        if (gameId) handlePlay(gameId);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     return (
         <Box>
             <Title title="סימולטור סיפור" />
-            {stage === 'upload' && <SimulatorUpload onLoaded={handleLoaded} />}
+            {stage === 'start' && (
+                <SimulatorStart
+                    onFileLoaded={handleFileLoaded}
+                    onPlay={handlePlay}
+                    loading={loadStatus === 'loading'}
+                    error={loadStatus === 'error' ? loadError : null}
+                />
+            )}
             {stage === 'loaded' && <SimulatorLoaded data={data} onStart={() => setStage('playing')} onReset={handleReset} />}
             {stage === 'playing' && (
                 <StorySimulatorGame

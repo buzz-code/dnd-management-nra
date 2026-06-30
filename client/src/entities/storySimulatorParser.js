@@ -99,9 +99,8 @@ export async function parseStoryExcel(file) {
 
     // Pass 2 — nodes from Sheet 1
     const nodes = {};
-    flowRows.forEach(row => {
-        const nodeId = (row['Node_ID'] || '').toString().trim();
-        if (!nodeId) return;
+    flowRows.forEach((row, index) => {
+        const nodeId = (row['Node_ID'] || '').toString().trim() || `node_${index}`;
 
         const rawChoices = [
             { key: 1, text: row['בחירה 1'], target: row['יעד 1'] },
@@ -142,7 +141,7 @@ export async function parseStoryExcel(file) {
         if (diceEven) parseTargetString(diceEven, aliasMap).forEach(r => routingRules.push({ key: null, diceOptions: '2,4,6', targetNodeId: r.target }));
 
         nodes[nodeId] = {
-            nodeId,
+            id: nodeId,
             segmentId: (row['Segment_ID'] || '').toString().trim(),
             level: Number(row['רמה']) || 0,
             type: (row['סוג'] || '').toString().trim() === 'מצב טכני' ? 'SYSTEM_NODE' : 'REGULAR_NODE',
@@ -154,11 +153,10 @@ export async function parseStoryExcel(file) {
 
     // Pass 3 — segments from Sheet 2 (content only, no routing)
     const segments = {};
-    segRows.forEach(row => {
-        const segmentId = (row['Segment_ID'] || '').toString().trim();
-        if (!segmentId) return;
+    segRows.forEach((row, index) => {
+        const segmentId = (row['Segment_ID'] || '').toString().trim() || `seg_${index}`;
         segments[segmentId] = {
-            segmentId,
+            id: segmentId,
             title: (row['כותרת'] || row['תווית בשרטוט'] || '').toString().trim(),
             text: (row['טקסט להקראה'] || '').toString().trim(),
         };

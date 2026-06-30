@@ -72,7 +72,7 @@ function InteractionPanel({ node, onChoice, onDiceNavigate, onAutoAdvance, onRes
         setDiceTarget(null);
         setPendingChoiceKey(null);
         setPendingChoiceText(null);
-    }, [node.nodeId]);
+    }, [node.id]);
 
     const diceRules = node.routingRules.filter(r => r.diceOptions !== 'NULL');
     const hasDice = diceRules.length > 0;
