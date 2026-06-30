@@ -38,7 +38,7 @@ export default {
                 layerType: 'סוג שכבה',
             },
         },
-        node: {
+        game_node: {
             name: 'צומת |||| צמתים',
             fields: {
                 ...generalResourceFieldsTranslation,

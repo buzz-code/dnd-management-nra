@@ -16,10 +16,10 @@ const Datagrid = ({ isAdmin, ...props }) => (
         {isAdmin && <TextField source="id" />}
         {isAdmin && <ReferenceField source="userId" reference="user" />}
         <ReferenceField source="gameId" reference="game" />
-        <ReferenceField source="sourceNodeId" reference="node" />
+        <ReferenceField source="sourceNodeId" reference="game_node" />
         <ReferenceField source="choiceId" reference="choice" />
         <TextField source="diceOptions" />
-        <ReferenceField source="targetNodeId" reference="node" />
+        <ReferenceField source="targetNodeId" reference="game_node" />
         {isAdmin && <DateField showDate showTime source="createdAt" />}
         {isAdmin && <DateField showDate showTime source="updatedAt" />}
     </CommonDatagrid>
@@ -29,10 +29,10 @@ const Inputs = ({ isCreate, isAdmin }) => (
     <>
         {isAdmin && <CommonReferenceInput source="userId" reference="user" />}
         <CommonReferenceInput source="gameId" reference="game" />
-        <CommonReferenceInput source="sourceNodeId" reference="node" validate={required()} />
+        <CommonReferenceInput source="sourceNodeId" reference="game_node" validate={required()} />
         <CommonReferenceInput source="choiceId" reference="choice" />
         <TextInput source="diceOptions" validate={[maxLength(255)]} />
-        <CommonReferenceInput source="targetNodeId" reference="node" validate={required()} />
+        <CommonReferenceInput source="targetNodeId" reference="game_node" validate={required()} />
         {!isCreate && isAdmin && <DateTimeInput source="createdAt" disabled />}
         {!isCreate && isAdmin && <DateTimeInput source="updatedAt" disabled />}
     </>
