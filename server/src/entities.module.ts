@@ -13,6 +13,7 @@ import layerConfig from './entity-modules/layer.config';
 import gameNodeConfig from './entity-modules/game-node.config';
 import choiceConfig from './entity-modules/choice.config';
 import routingRuleConfig from './entity-modules/routing-rule.config';
+import storyVoiceConfig from './entity-modules/story-voice.config';
 
 registerEntityNameMap({
   game: 'משחקים',
@@ -21,6 +22,7 @@ registerEntityNameMap({
   game_node: 'צמתים',
   choice: 'בחירות',
   routing_rule: 'כללי ניתוב',
+  story_voice: 'הקראות קוליות',
 });
 
 @Module({
@@ -34,6 +36,7 @@ registerEntityNameMap({
     BaseEntityModule.register(gameNodeConfig),
     BaseEntityModule.register(choiceConfig),
     BaseEntityModule.register(routingRuleConfig),
+    BaseEntityModule.register(storyVoiceConfig),
 
     // Audit log
     BaseEntityModule.register(

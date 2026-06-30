@@ -17,6 +17,7 @@ import { getDashboardItems, getMaintainanceMessage } from './settingsUtil';
 import { DashboardItemsInput } from './DashboardItemsInput';
 import { GeneralSettingsInput } from './GeneralSettingsInput';
 import { YemotSettingsInput } from '@shared/components/phone/YemotSettingsInput';
+import { ElevenLabsSettingsInput } from './ElevenLabsSettingsInput';
 
 const SettingsToolbar = () => (
     <Toolbar>
@@ -58,6 +59,7 @@ export default function Settings() {
                         <GeneralSettingsInput />
                         <DashboardItemsInput />
                         <YemotSettingsInput />
+                        <ElevenLabsSettingsInput />
                     </SimpleForm>
                 </ResourceContextProvider>
             </CardContent>
