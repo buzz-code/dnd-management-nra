@@ -70,6 +70,16 @@ export default {
                 targetNodeId: 'צומת יעד',
             },
         },
+        story_voice: {
+            name: 'הקראה קולית |||| הקראות קוליות',
+            fields: {
+                ...generalResourceFieldsTranslation,
+                name: 'שם',
+                modelId: 'מודל',
+                status: 'סטטוס',
+                errorMessage: 'שגיאה',
+            },
+        },
         settings: {
             name: 'הגדרות',
             fields: {
