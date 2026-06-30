@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { Title, useGetList } from 'react-admin';
+import { Title, Form, SaveButton } from 'react-admin';
 import {
-    Alert, Autocomplete, Box, Button, Card, CardActions, CardContent, Chip,
-    CircularProgress, Divider, LinearProgress, Stack, TextField, Typography,
+    Alert, Box, Button, Card, CardActions, CardContent, Chip,
+    CircularProgress, Divider, LinearProgress, Stack, Typography,
 } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { useIsAdmin } from '@shared/utils/permissionsUtil';
+import CommonReferenceInput from '@shared/components/fields/CommonReferenceInput';
 import { parseStoryExcel } from './storySimulatorParser';
 import StorySimulatorGame from './StorySimulatorGame';
 import { useStoryUploader } from './storySimulatorUploader';
@@ -65,25 +66,13 @@ function SimulatorLoaded({ data, onStart, onReset }) {
     const storyTitle = startSegment?.title || startNodeId || 'סיפור ללא שם';
 
     const isAdmin = useIsAdmin();
-    const { data: games, isLoading: gamesLoading } = useGetList('game', {
-        pagination: { page: 1, perPage: 200 },
-        sort: { field: 'id', order: 'DESC' },
-    });
-    const { data: users } = useGetList('user', {
-        pagination: { page: 1, perPage: 200 },
-        sort: { field: 'id', order: 'DESC' },
-    }, { enabled: isAdmin });
-
-    const [selectedGame, setSelectedGame] = useState(null);
-    const [selectedUser, setSelectedUser] = useState(null);
-
     const { upload, status, progress, result, error } = useStoryUploader({ nodes, segments, startNodeId });
 
-    function handleUpload() {
+    function handleUploadSubmit(values) {
         upload({
             storyTitle,
-            existingGameId: selectedGame?.id ?? null,
-            assignUserId: selectedUser?.id ?? null,
+            existingGameId: values.gameId ?? null,
+            assignUserId: values.userId ?? null,
         });
     }
 
@@ -110,47 +99,52 @@ function SimulatorLoaded({ data, onStart, onReset }) {
 
                     <Divider sx={{ my: 2 }} />
                     <Typography variant="subtitle2" gutterBottom>העלאה לשרת</Typography>
-                    <Autocomplete
-                        options={games || []}
-                        getOptionLabel={g => g.name || `#${g.id}`}
-                        isOptionEqualToValue={(a, b) => a.id === b.id}
-                        value={selectedGame}
-                        onChange={(e, val) => setSelectedGame(val)}
-                        loading={gamesLoading}
-                        disabled={uploading}
-                        renderInput={params => (
-                            <TextField {...params} label="דרוס משחק קיים (אופציונלי)" size="small" margin="dense" />
-                        )}
-                    />
-                    {isAdmin && (
-                        <Autocomplete
-                            options={users || []}
-                            getOptionLabel={u => u.name || u.email || `#${u.id}`}
-                            isOptionEqualToValue={(a, b) => a.id === b.id}
-                            value={selectedUser}
-                            onChange={(e, val) => setSelectedUser(val)}
-                            disabled={uploading}
-                            renderInput={params => (
-                                <TextField {...params} label="שייך למשתמש (מנהל בלבד)" size="small" margin="dense" />
-                            )}
-                        />
-                    )}
 
-                    {uploading && (
-                        <Box mt={2}>
-                            <Typography variant="body2" gutterBottom>{progress.step}</Typography>
-                            <LinearProgress variant="determinate" value={(progress.stepIndex / progress.total) * 100} />
-                        </Box>
-                    )}
-                    {status === 'done' && result && (
-                        <Alert severity="success" sx={{ mt: 2 }}>
-                            הועלה בהצלחה — {result.counts.nodes} צמתים, {result.counts.segments} מקטעים,{' '}
-                            {result.counts.choices} בחירות, {result.counts.rules} חוקי ניתוב (משחק #{result.gameId})
-                        </Alert>
-                    )}
-                    {status === 'error' && (
-                        <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>
-                    )}
+                    <Form onSubmit={handleUploadSubmit} defaultValues={{ gameId: null, userId: null }}>
+                        <CommonReferenceInput
+                            source="gameId"
+                            reference="game"
+                            label="דרוס משחק קיים (אופציונלי)"
+                            helperText="אם תבחר משחק קיים, הנתונים הקיימים שלו יימחקו ויוחלפו"
+                            disabled={uploading}
+                            fullWidth
+                        />
+                        {isAdmin && (
+                            <CommonReferenceInput
+                                source="userId"
+                                reference="user"
+                                label="שייך למשתמש (מנהל בלבד)"
+                                disabled={uploading}
+                                fullWidth
+                            />
+                        )}
+
+                        {uploading && (
+                            <Box mt={2}>
+                                <Typography variant="body2" gutterBottom>{progress.step}</Typography>
+                                <LinearProgress variant="determinate" value={(progress.stepIndex / progress.total) * 100} />
+                            </Box>
+                        )}
+                        {status === 'done' && result && (
+                            <Alert severity="success" sx={{ mt: 2 }}>
+                                הועלה בהצלחה — {result.counts.nodes} צמתים, {result.counts.segments} מקטעים,{' '}
+                                {result.counts.choices} בחירות, {result.counts.rules} חוקי ניתוב (משחק #{result.gameId})
+                            </Alert>
+                        )}
+                        {status === 'error' && (
+                            <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>
+                        )}
+
+                        <SaveButton
+                            label="העלה לשרת"
+                            icon={uploading ? <CircularProgress size={18} /> : <CloudUploadIcon />}
+                            alwaysEnable
+                            disabled={uploading}
+                            variant="outlined"
+                            color="secondary"
+                            sx={{ width: '100%', mt: 2 }}
+                        />
+                    </Form>
                 </CardContent>
                 <CardActions sx={{ flexDirection: 'column', gap: 1, px: 2, pb: 2 }}>
                     <Button
@@ -162,16 +156,6 @@ function SimulatorLoaded({ data, onStart, onReset }) {
                         disabled={!startNodeId}
                     >
                         התחל משחק
-                    </Button>
-                    <Button
-                        variant="outlined"
-                        color="secondary"
-                        fullWidth
-                        startIcon={uploading ? <CircularProgress size={18} /> : <CloudUploadIcon />}
-                        onClick={handleUpload}
-                        disabled={uploading}
-                    >
-                        {selectedGame ? `דרוס את "${selectedGame.name}"` : 'העלה לשרת כמשחק חדש'}
                     </Button>
                     <Button variant="text" fullWidth onClick={onReset} startIcon={<UploadFileIcon />}>
                         טען קובץ אחר
