@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TextField, DateField, ChipField, useDataProvider, useNotify, Button } from 'react-admin';
+import { TextField, DateField, ChipField, useDataProvider, useNotify, useRecordContext, Button } from 'react-admin';
 import DownloadIcon from '@mui/icons-material/Download';
 import { CommonDatagrid } from '@shared/components/crudContainers/CommonList';
 import { getResourceComponents } from '@shared/components/crudContainers/CommonEntity';
@@ -11,11 +11,13 @@ const statusColorMap = {
     failed: 'error',
 };
 
-const StatusChip = ({ record }) => (
-    <ChipField source="status" color={statusColorMap[record?.status] || 'default'} />
-);
+const StatusChip = () => {
+    const record = useRecordContext();
+    return <ChipField source="status" color={statusColorMap[record?.status] || 'default'} />;
+};
 
-const DownloadButton = ({ record }) => {
+const DownloadButton = () => {
+    const record = useRecordContext();
     const dataProvider = useDataProvider();
     const notify = useNotify();
     const [loading, setLoading] = useState(false);
