@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Title, Form, SaveButton } from 'react-admin';
+import { Title, Form, SaveButton, TextInput, required, maxLength } from 'react-admin';
 import {
     Alert, Box, Button, Card, CardActions, CardContent, Chip,
     CircularProgress, Divider, LinearProgress, Stack, Typography,
@@ -70,7 +70,7 @@ function SimulatorLoaded({ data, onStart, onReset }) {
 
     function handleUploadSubmit(values) {
         upload({
-            storyTitle,
+            gameName: values.name,
             existingGameId: values.gameId ?? null,
             assignUserId: values.userId ?? null,
         });
@@ -100,7 +100,14 @@ function SimulatorLoaded({ data, onStart, onReset }) {
                     <Divider sx={{ my: 2 }} />
                     <Typography variant="subtitle2" gutterBottom>העלאה לשרת</Typography>
 
-                    <Form onSubmit={handleUploadSubmit} defaultValues={{ gameId: null, userId: null }}>
+                    <Form onSubmit={handleUploadSubmit} defaultValues={{ name: storyTitle, gameId: null, userId: null }}>
+                        <TextInput
+                            source="name"
+                            label="שם המשחק"
+                            validate={[required(), maxLength(255)]}
+                            disabled={uploading}
+                            fullWidth
+                        />
                         <CommonReferenceInput
                             source="gameId"
                             reference="game"

@@ -14,7 +14,8 @@ function computeNodeType(node, startNodeId) {
  * Uploads a parsed story (nodes + segments) to the server as a Game graph.
  *
  * - If `existingGameId` is passed, the game's existing segments/nodes/choices/
- *   routing_rules are deleted first, then recreated under the same gameId.
+ *   routing_rules are deleted first, then recreated under the same gameId;
+ *   the game's `name` is also updated to `gameName`.
  * - `Layer` has no gameId column (it's a shared resource), so layers are
  *   found-or-created by name instead of being deleted/recreated.
  * - When `assignUserId` is passed (admin only), it's stamped on every created
@@ -60,7 +61,7 @@ export function useStoryUploader({ nodes, segments, startNodeId }) {
         return Object.fromEntries(levels.map(level => [String(level), existingByName[`רמה ${level}`] ?? createdByName[`רמה ${level}`]]));
     }
 
-    async function upload({ storyTitle, existingGameId, assignUserId }) {
+    async function upload({ gameName, existingGameId, assignUserId }) {
         setStatus('uploading');
         setError(null);
         setResult(null);
@@ -71,9 +72,10 @@ export function useStoryUploader({ nodes, segments, startNodeId }) {
             if (gameId) {
                 setProgress({ step: 'מוחק נתונים קודמים של המשחק', stepIndex: 1, total: 6 });
                 await deleteExistingGameData(gameId);
+                await dataProvider.update('game', { id: gameId, data: { name: gameName }, previousData: { id: gameId } });
             } else {
                 setProgress({ step: 'יוצר משחק', stepIndex: 1, total: 6 });
-                const [game] = await dataProvider.createMany('game', [withUser({ name: storyTitle })]);
+                const [game] = await dataProvider.createMany('game', [withUser({ name: gameName })]);
                 gameId = game.id;
             }
 
