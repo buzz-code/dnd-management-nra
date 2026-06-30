@@ -27,7 +27,7 @@ const DownloadButton = () => {
     const handleClick = (e) => {
         e.stopPropagation();
         setLoading(true);
-        dataProvider.actionAndDownload('story_voice', 'download', { id: record.id }, {})
+        dataProvider.actionAndDownload('story_voice', 'download', { 'extra.id': record.id }, {})
             .catch(handleError(notify))
             .finally(() => setLoading(false));
     };

@@ -179,7 +179,7 @@ export default function StoryVoiceGenerator() {
         if (!result) return;
         setDownloading(true);
         try {
-            await dataProvider.actionAndDownload('story_voice', 'download', { id: result.id }, {});
+            await dataProvider.actionAndDownload('story_voice', 'download', { 'extra.id': result.id }, {});
         } catch (err) {
             handleError(notify)(err);
         } finally {
