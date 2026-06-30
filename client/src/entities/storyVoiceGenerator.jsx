@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { AutocompleteInput, Form, SaveButton, SelectInput, TextInput, Title, required, useDataProvider, useNotify } from 'react-admin';
 import {
     Alert, Box, Button, Card, CardContent, Chip, CircularProgress, Divider, Stack, TextField, Typography,
@@ -6,17 +6,22 @@ import {
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import GraphicEqIcon from '@mui/icons-material/GraphicEq';
 import DownloadIcon from '@mui/icons-material/Download';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { handleError } from '@shared/utils/notifyUtil';
 import { ELEVEN_LABS_MODELS, DEFAULT_ELEVEN_LABS_MODEL } from './elevenLabsModels';
 
-function useDebounce(value, delay) {
-    const [debounced, setDebounced] = useState(value);
-    useEffect(() => {
-        const t = setTimeout(() => setDebounced(value), delay);
-        return () => clearTimeout(t);
-    }, [value, delay]);
-    return debounced;
+function useVoiceChoices() {
+    return useQuery({
+        queryKey: ['elevenlabs-voices'],
+        queryFn: () =>
+            fetch('https://api.elevenlabs.io/v1/voices')
+                .then(r => r.json())
+                .then(({ voices = [] }) => voices.map(({ voice_id, name, labels = {} }) => ({
+                    id: voice_id,
+                    name: [name, labels.gender, labels.accent].filter(Boolean).join(' · '),
+                }))),
+        staleTime: Infinity,
+    });
 }
 
 function parseSegments(text) {
@@ -30,42 +35,6 @@ function parseSegments(text) {
         }
     });
     return parsed;
-}
-
-function fetchVoices(search) {
-    const params = new URLSearchParams({ page_size: '20' });
-    if (search) params.set('search', search);
-    else params.set('sort', 'usage_character_count_1y');
-    return fetch(`https://api.elevenlabs.io/v1/shared-voices?${params}`)
-        .then(r => r.json())
-        .then(({ voices = [] }) => voices.map(({ voice_id, name, gender, accent, descriptive }) => ({
-            id: voice_id,
-            name: [name, gender, accent, descriptive].filter(Boolean).join(' · '),
-        })));
-}
-
-function VoiceAutocomplete({ source, label, validate }) {
-    const [search, setSearch] = useState('');
-    const debouncedSearch = useDebounce(search, 400);
-
-    const { data: choices = [] } = useQuery({
-        queryKey: ['elevenlabs-voices', debouncedSearch],
-        queryFn: () => fetchVoices(debouncedSearch),
-        staleTime: 60_000,
-        placeholderData: keepPreviousData,
-    });
-
-    return (
-        <AutocompleteInput
-            source={source}
-            label={label}
-            validate={validate}
-            choices={choices}
-            onInputChange={(_, value) => setSearch(value)}
-            filterOptions={x => x}
-            fullWidth
-        />
-    );
 }
 
 function JsonInputStage({ jsonText, onParse, parseError }) {
@@ -98,6 +67,8 @@ function JsonInputStage({ jsonText, onParse, parseError }) {
 }
 
 function GenerateForm({ segments, characters, onSubmit, generating }) {
+    const { data: voiceChoices = [] } = useVoiceChoices();
+
     const defaultValues = useMemo(() => ({
         name: '',
         modelId: DEFAULT_ELEVEN_LABS_MODEL,
@@ -124,11 +95,13 @@ function GenerateForm({ segments, characters, onSubmit, generating }) {
 
             <Typography variant="subtitle2" gutterBottom>בחירת קול לכל דמות</Typography>
             {characters.map(character => (
-                <VoiceAutocomplete
+                <AutocompleteInput
                     key={character}
                     source={`characterVoices.${character}`}
                     label={`קול עבור "${character}"`}
                     validate={required()}
+                    choices={voiceChoices}
+                    fullWidth
                 />
             ))}
 
