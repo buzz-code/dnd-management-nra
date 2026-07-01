@@ -1,13 +1,17 @@
 import { useMemo, useState } from 'react';
-import { AutocompleteInput, Form, SaveButton, TextInput, Title, required, useDataProvider, useNotify } from 'react-admin';
+import { Form, SaveButton, TextInput, Title, required, useDataProvider, useNotify } from 'react-admin';
 import {
-    Alert, Box, Button, Card, CardContent, Chip, CircularProgress, Divider, Stack, TextField, Typography,
+    Alert, Autocomplete, Box, Button, Card, CardContent, Chip, CircularProgress, Divider, IconButton, Stack,
+    TextField, Typography,
 } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import GraphicEqIcon from '@mui/icons-material/GraphicEq';
 import DownloadIcon from '@mui/icons-material/Download';
+import SaveIcon from '@mui/icons-material/Save';
+import SyncIcon from '@mui/icons-material/Sync';
 import { useQuery } from '@tanstack/react-query';
 import { handleError } from '@shared/utils/notifyUtil';
+import { VoiceInput } from './elevenLabsVoice';
 
 function InstructionsBox() {
     return (
@@ -33,18 +37,44 @@ function InstructionsBox() {
     );
 }
 
-function useVoiceChoices() {
+function useGamesList(dataProvider) {
     return useQuery({
-        queryKey: ['elevenlabs-voices'],
-        queryFn: () =>
-            fetch('https://api.elevenlabs.io/v1/voices')
-                .then(r => r.json())
-                .then(({ voices = [] }) => voices.map(({ voice_id, name, labels = {} }) => ({
-                    id: voice_id,
-                    name: [name, labels.gender, labels.accent].filter(Boolean).join(' · '),
-                }))),
-        staleTime: Infinity,
+        queryKey: ['games-list'],
+        queryFn: () => dataProvider.getList('game', {
+            pagination: { page: 1, perPage: 200 },
+            sort: { field: 'name', order: 'ASC' },
+            filter: {},
+        }).then(({ data }) => data),
+        staleTime: 60_000,
     });
+}
+
+function useGameCharacters(dataProvider, gameId) {
+    return useQuery({
+        queryKey: ['game-characters', gameId],
+        queryFn: () => dataProvider.getList('character', {
+            pagination: { page: 1, perPage: 200 },
+            sort: { field: 'name', order: 'ASC' },
+            filter: { gameId },
+        }).then(({ data }) => data),
+        enabled: !!gameId,
+    });
+}
+
+function GameSelector({ dataProvider, gameId, onChange }) {
+    const { data: games = [] } = useGamesList(dataProvider);
+    const selected = games.find(g => g.id === gameId) || null;
+    return (
+        <Autocomplete
+            options={games}
+            getOptionLabel={g => g.name || ''}
+            isOptionEqualToValue={(o, v) => o.id === v.id}
+            value={selected}
+            onChange={(_, val) => onChange(val ? val.id : null)}
+            renderInput={params => <TextField {...params} label="שיוך למשחק (אופציונלי, לשימוש חוזר בקולות הדמויות)" />}
+            sx={{ mb: 2 }}
+        />
+    );
 }
 
 function parseSegments(text) {
@@ -89,16 +119,18 @@ function JsonInputStage({ jsonText, onParse, parseError }) {
     );
 }
 
-function GenerateForm({ segments, characters, onSubmit, generating }) {
-    const { data: voiceChoices = [] } = useVoiceChoices();
-
+function GenerateForm({
+    segments, characters, onSubmit, generating, gameId, gameCharactersByName, onSaveCharacter, savingCharacter,
+}) {
     const defaultValues = useMemo(() => ({
         name: '',
-        characterVoices: Object.fromEntries(characters.map(c => [c, ''])),
-    }), [characters]);
+        characterVoices: Object.fromEntries(
+            characters.map(c => [c, gameCharactersByName[c.toLowerCase()]?.voiceId || '']),
+        ),
+    }), [characters, gameCharactersByName]);
 
     return (
-        <Form key={characters.join(',')} onSubmit={onSubmit} defaultValues={defaultValues}>
+        <Form key={`${characters.join(',')}|${gameId || ''}`} onSubmit={onSubmit} defaultValues={defaultValues}>
             <Divider sx={{ my: 2 }} />
             <Stack direction="row" spacing={1} mb={2}>
                 <Chip label={`${segments.length} מקטעים`} color="primary" />
@@ -108,16 +140,27 @@ function GenerateForm({ segments, characters, onSubmit, generating }) {
             <TextInput source="name" label="שם ההקראה" validate={required()} fullWidth />
 
             <Typography variant="subtitle2" gutterBottom>בחירת קול לכל דמות</Typography>
-            {characters.map(character => (
-                <AutocompleteInput
-                    key={character}
-                    source={`characterVoices.${character}`}
-                    label={`קול עבור "${character}"`}
-                    validate={required()}
-                    choices={voiceChoices}
-                    fullWidth
-                />
-            ))}
+            {characters.map(character => {
+                const matched = gameCharactersByName[character.toLowerCase()];
+                return (
+                    <VoiceInput
+                        key={character}
+                        source={`characterVoices.${character}`}
+                        label={`קול עבור "${character}"`}
+                        validate={required()}
+                        renderExtra={gameId ? voiceId => (
+                            <IconButton
+                                size="small"
+                                disabled={!voiceId || savingCharacter === character}
+                                title={matched ? 'עדכן דמות במשחק' : 'שמור כדמות במשחק'}
+                                onClick={() => onSaveCharacter(character, voiceId, matched?.id)}
+                            >
+                                {matched ? <SyncIcon fontSize="small" /> : <SaveIcon fontSize="small" />}
+                            </IconButton>
+                        ) : undefined}
+                    />
+                );
+            })}
 
             <SaveButton
                 label="צור הקראה קולית"
@@ -167,10 +210,20 @@ export default function StoryVoiceGenerator() {
     const [generating, setGenerating] = useState(false);
     const [result, setResult] = useState(null);
     const [downloading, setDownloading] = useState(false);
+    const [gameId, setGameId] = useState(null);
+    const [savingCharacter, setSavingCharacter] = useState(null);
 
     const characters = useMemo(
         () => (segments ? [...new Set(segments.map(s => s.character))] : []),
         [segments],
+    );
+
+    const {
+        data: gameCharacters = [], isLoading: loadingGameCharacters, refetch: refetchGameCharacters,
+    } = useGameCharacters(dataProvider, gameId);
+    const gameCharactersByName = useMemo(
+        () => Object.fromEntries(gameCharacters.map(c => [c.name.toLowerCase(), c])),
+        [gameCharacters],
     );
 
     function handleParse(text) {
@@ -206,6 +259,24 @@ export default function StoryVoiceGenerator() {
         }
     }
 
+    async function handleSaveCharacter(characterName, voiceId, existingId) {
+        if (!voiceId || !gameId) return;
+        setSavingCharacter(characterName);
+        try {
+            if (existingId) {
+                await dataProvider.update('character', { id: existingId, data: { voiceId }, previousData: { id: existingId } });
+            } else {
+                await dataProvider.create('character', { data: { gameId, name: characterName, voiceId } });
+            }
+            notify('הדמות נשמרה במשחק', { type: 'success' });
+            await refetchGameCharacters();
+        } catch (err) {
+            handleError(notify)(err);
+        } finally {
+            setSavingCharacter(null);
+        }
+    }
+
     async function handleDownload() {
         if (!result) return;
         setDownloading(true);
@@ -227,16 +298,24 @@ export default function StoryVoiceGenerator() {
 
                     <InstructionsBox />
 
+                    <GameSelector dataProvider={dataProvider} gameId={gameId} onChange={setGameId} />
+
                     <JsonInputStage jsonText={jsonText} onParse={handleParse} parseError={parseError} />
 
-                    {segments && (
-                        <GenerateForm
-                            segments={segments}
-                            characters={characters}
-                            onSubmit={handleGenerate}
-                            generating={generating}
-                        />
-                    )}
+                    {segments && (loadingGameCharacters
+                        ? <Box textAlign="center" my={2}><CircularProgress size={24} /></Box>
+                        : (
+                            <GenerateForm
+                                segments={segments}
+                                characters={characters}
+                                onSubmit={handleGenerate}
+                                generating={generating}
+                                gameId={gameId}
+                                gameCharactersByName={gameCharactersByName}
+                                onSaveCharacter={handleSaveCharacter}
+                                savingCharacter={savingCharacter}
+                            />
+                        ))}
 
                     <GenerationResult result={result} downloading={downloading} onDownload={handleDownload} />
                 </CardContent>

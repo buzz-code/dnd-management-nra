@@ -18,6 +18,15 @@ export default {
                 isActive: 'פעיל',
             },
         },
+        character: {
+            name: 'דמות |||| דמויות',
+            fields: {
+                ...generalResourceFieldsTranslation,
+                gameId: 'משחק',
+                name: 'שם',
+                voiceId: 'קול',
+            },
+        },
         segment: {
             name: 'קטע |||| קטעים',
             fields: {

@@ -8,6 +8,7 @@ import { Segment } from './db/entities/Segment.entity';
 import { Layer } from './db/entities/Layer.entity';
 
 import gameConfig from './entity-modules/game.config';
+import characterConfig from './entity-modules/character.config';
 import segmentConfig from './entity-modules/segment.config';
 import layerConfig from './entity-modules/layer.config';
 import gameNodeConfig from './entity-modules/game-node.config';
@@ -17,6 +18,7 @@ import storyVoiceConfig from './entity-modules/story-voice.config';
 
 registerEntityNameMap({
   game: 'משחקים',
+  character: 'דמויות',
   segment: 'קטעים',
   layer: 'שכבות',
   game_node: 'צמתים',
@@ -31,6 +33,7 @@ registerEntityNameMap({
 
     // DnD domain entities
     BaseEntityModule.register(gameConfig),
+    BaseEntityModule.register(characterConfig),
     BaseEntityModule.register(segmentConfig),
     BaseEntityModule.register(layerConfig),
     BaseEntityModule.register(gameNodeConfig),
