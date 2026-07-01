@@ -8,6 +8,7 @@ import AdminAppShell from '@shared/components/app/AdminAppShell';
 import CommonRoutes from '@shared/components/app/CommonRoutes';
 import CommonAdminResources from '@shared/components/app/CommonAdminResources';
 import CommonSettingsResources from '@shared/components/app/CommonSettingsResources';
+import CommonPhoneResources from '@shared/components/app/CommonPhoneResources';
 
 import { Dashboard, Layout } from 'src/GeneralLayout';
 
@@ -23,11 +24,7 @@ import storyVoice from 'src/entities/storyVoice';
 import StorySimulator from 'src/entities/storySimulator';
 import StoryVoiceGenerator from 'src/entities/storyVoiceGenerator';
 
-import phoneCampaign from '@shared/components/common-entities/phone-campaign';
-import phoneTemplate from '@shared/components/common-entities/phone-template';
-
 import Settings from 'src/settings/Settings';
-import { isPhoneCampaign } from '@shared/utils/permissionsUtil';
 
 import LayersIcon from '@mui/icons-material/Layers';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
@@ -35,7 +32,6 @@ import TouchAppIcon from '@mui/icons-material/TouchApp';
 import AltRouteIcon from '@mui/icons-material/AltRoute';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import GraphicEqIcon from '@mui/icons-material/GraphicEq';
-import PhoneIcon from '@mui/icons-material/Phone';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 
 const themeOptions = { primary: teal[700], secondary: orange[600] };
@@ -64,22 +60,7 @@ const App = () => (
                 <Resource name="story_voice" {...storyVoice} options={{ menuGroup: 'content' }} icon={GraphicEqIcon} />
 
                 {CommonSettingsResources()}
-                {isPhoneCampaign(permissions) && (
-                    <>
-                        <Resource
-                            name="phone_template"
-                            {...phoneTemplate}
-                            options={{ menuGroup: 'phone' }}
-                            icon={PhoneIcon}
-                        />
-                        <Resource
-                            name="phone_campaign"
-                            {...phoneCampaign}
-                            options={{ menuGroup: 'phone' }}
-                            icon={PhoneIcon}
-                        />
-                    </>
-                )}
+                {CommonPhoneResources({ permissions })}
                 {CommonAdminResources({ permissions })}
 
                 <CustomRoutes>

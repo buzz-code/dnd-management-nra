@@ -5,7 +5,6 @@ export default {
     menu_groups: {
         content: 'תוכן',
         structure: 'מבנה',
-        phone: 'טלפון',
         settings: 'הגדרות',
         admin: 'ניהול',
     },
