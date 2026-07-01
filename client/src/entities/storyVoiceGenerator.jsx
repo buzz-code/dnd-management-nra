@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { AutocompleteInput, Form, SaveButton, SelectInput, TextInput, Title, required, useDataProvider, useNotify } from 'react-admin';
+import { AutocompleteInput, Form, SaveButton, TextInput, Title, required, useDataProvider, useNotify } from 'react-admin';
 import {
     Alert, Box, Button, Card, CardContent, Chip, CircularProgress, Divider, Stack, TextField, Typography,
 } from '@mui/material';
@@ -8,7 +8,47 @@ import GraphicEqIcon from '@mui/icons-material/GraphicEq';
 import DownloadIcon from '@mui/icons-material/Download';
 import { useQuery } from '@tanstack/react-query';
 import { handleError } from '@shared/utils/notifyUtil';
-import { ELEVEN_LABS_MODELS, DEFAULT_ELEVEN_LABS_MODEL } from './elevenLabsModels';
+
+function InstructionsBox() {
+    return (
+        <Box mb={2}>
+            <Typography variant='body1'>
+                יש להזין מערך JSON של מקטעי טקסט, כאשר כל מקטע במערך מייצג קטע דיבור אחד. שדות המקטע:
+                <ul>
+                    <li><code>character</code> - <strong>שדה חובה.</strong> מי "אומר" את המקטע: <code>narrator</code> עבור טקסט קריינות, או שם הדמות עבור דיאלוג.</li>
+                    <li><code>text</code> - <strong>שדה חובה.</strong> הטקסט המדויק שיוקרא במקטע זה.</li>
+                </ul>
+                <strong>הנחיית הגשה/טון (לחישה, התרגשות וכדומה):</strong>
+                <br />
+                אין שדה נפרד לכך - יש לשלב הנחיה כזו ישירות בתוך הטקסט של <code>text</code>, בסוגריים מרובעים,
+                במקום שבו רוצים שההגשה תשתנה. לדוגמה:
+                <pre dir='ltr'>
+{`"text": "[בלחישה] מישהו היה כאן."`}
+                </pre>
+                <ul>
+                    <li>אפשר להוסיף כמה תגיות כאלה באותו מקטע, כל אחת במקום שבו רוצים שהיא תשפיע.</li>
+                    <li>יש לשמור על התגית קצרה - מילה או שתיים, לא משפט שלם.</li>
+                    <li>יש להשתמש בכך רק כשיש צורך מיוחד בהנחיית הגשה - ברירת המחדל של הקריין מתאימה לרוב המקטעים.</li>
+                </ul>
+                <strong>לתשומת לב:</strong>
+                <ul>
+                    <li>סדר המקטעים במערך הוא סדר ההקראה בפועל.</li>
+                    <li>יש להשתמש בשם עקבי לכל דמות לאורך כל הסיפור.</li>
+                    <li>ניתן לפצל טקסט קריינות ארוך למספר מקטעים בכל מקום שיש מעבר בין דמויות.</li>
+                </ul>
+                <br />
+                דוגמה למבנה הנדרש:
+                <pre dir='ltr'>
+{`[
+  { "character": "narrator", "text": "..." },
+  { "character": "narrator", "text": "[בלחישה] מישהו היה כאן." },
+  { "character": "שם הדמות", "text": "[מהוסס ומודאג] מה שמעת?" }
+]`}
+                </pre>
+            </Typography>
+        </Box>
+    );
+}
 
 function useVoiceChoices() {
     return useQuery({
@@ -47,7 +87,7 @@ function JsonInputStage({ jsonText, onParse, parseError }) {
                 multiline
                 minRows={8}
                 fullWidth
-                placeholder='[{"segment_id": 1, "character": "narrator", "text": "..."}]'
+                placeholder='[{"character": "narrator", "text": "..."}]'
                 sx={{ mb: 1, direction: 'ltr' }}
             />
             <Button startIcon={<UploadFileIcon />} component="label" size="small">
@@ -71,7 +111,6 @@ function GenerateForm({ segments, characters, onSubmit, generating }) {
 
     const defaultValues = useMemo(() => ({
         name: '',
-        modelId: DEFAULT_ELEVEN_LABS_MODEL,
         characterVoices: Object.fromEntries(characters.map(c => [c, ''])),
     }), [characters]);
 
@@ -84,14 +123,6 @@ function GenerateForm({ segments, characters, onSubmit, generating }) {
             </Stack>
 
             <TextInput source="name" label="שם ההקראה" validate={required()} fullWidth />
-
-            <SelectInput
-                source="modelId"
-                label="מודל ElevenLabs"
-                choices={ELEVEN_LABS_MODELS}
-                validate={required()}
-                fullWidth
-            />
 
             <Typography variant="subtitle2" gutterBottom>בחירת קול לכל דמות</Typography>
             {characters.map(character => (
@@ -171,12 +202,12 @@ export default function StoryVoiceGenerator() {
         }
     }
 
-    async function handleGenerate({ name, modelId, characterVoices }) {
+    async function handleGenerate({ name, characterVoices }) {
         setGenerating(true);
         setResult(null);
         try {
             const { data: created } = await dataProvider.create('story_voice', {
-                data: { name, segments, characterVoices, modelId },
+                data: { name, segments, characterVoices },
             });
             // dataProvider.create() only echoes back the request body + id, not the
             // server-computed status/filePath/errorMessage - re-fetch the real record.
@@ -210,6 +241,8 @@ export default function StoryVoiceGenerator() {
             <Card sx={{ maxWidth: 720, mx: 'auto', mt: 2, p: 2 }}>
                 <CardContent>
                     <Typography variant="h5" gutterBottom>יצירת הקראה קולית (ElevenLabs)</Typography>
+
+                    <InstructionsBox />
 
                     <JsonInputStage jsonText={jsonText} onParse={handleParse} parseError={parseError} />
 

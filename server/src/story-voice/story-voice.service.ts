@@ -15,6 +15,8 @@ import { User } from 'src/db/entities/User.entity';
 import { StoryVoice, StoryVoiceStatus } from 'src/db/entities/StoryVoice.entity';
 import { ElevenLabsService } from './eleven-labs.service';
 
+const DEFAULT_ELEVEN_LABS_MODEL_ID = 'eleven_v3';
+
 export class StoryVoiceService extends BaseEntityService<StoryVoice> {
   constructor(
     @InjectEntityRepository repo: Repository<StoryVoice>,
@@ -26,6 +28,7 @@ export class StoryVoiceService extends BaseEntityService<StoryVoice> {
 
   @Override()
   async createOne(req: CrudRequest<any>, dto: DeepPartial<StoryVoice>): Promise<StoryVoice> {
+    dto.modelId = dto.modelId || DEFAULT_ELEVEN_LABS_MODEL_ID;
     const created = await super.createOne(req, dto);
     return this.generateAudio(created);
   }
