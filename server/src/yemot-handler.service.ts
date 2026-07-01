@@ -10,7 +10,7 @@ export class YemotHandlerService extends BaseYemotHandlerService {
     await this.getUserByDidPhone();
     if (!this.user) return;
 
-    await this.sendMessage('ברוכים הבאים למשחק ההרפתקה. הקש אחת להרפתקה, הקש שתיים לקרב');
+    await this.sendMessage('ברוכים הבאים למשחק ההרפתקה הקש אחת להרפתקה הקש שתיים לקרב');
 
     const choice = await this.askForInput('בחר אפשרות', {
       min_digits: 1,
@@ -19,11 +19,11 @@ export class YemotHandlerService extends BaseYemotHandlerService {
     });
 
     if (choice === '1') {
-      await this.hangupWithMessage('יצאת להרפתקה. תודה שיחקת, להתראות');
+      await this.hangupWithMessage('יצאת להרפתקה תודה שיחקת להתראות');
     } else if (choice === '2') {
-      await this.hangupWithMessage('יצאת לקרב. תודה שיחקת, להתראות');
+      await this.hangupWithMessage('יצאת לקרב תודה שיחקת להתראות');
     } else {
-      await this.hangupWithMessage('בחירה לא תקינה, שיחה מסתיימת');
+      await this.hangupWithMessage('בחירה לא תקינה שיחה מסתיימת');
     }
   }
 

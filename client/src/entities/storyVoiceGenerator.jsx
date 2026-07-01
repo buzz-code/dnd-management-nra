@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { AutocompleteInput, Form, SaveButton, SelectInput, TextInput, Title, required, useDataProvider, useNotify } from 'react-admin';
+import { AutocompleteInput, Form, SaveButton, TextInput, Title, required, useDataProvider, useNotify } from 'react-admin';
 import {
     Alert, Box, Button, Card, CardContent, Chip, CircularProgress, Divider, Stack, TextField, Typography,
 } from '@mui/material';
@@ -8,7 +8,30 @@ import GraphicEqIcon from '@mui/icons-material/GraphicEq';
 import DownloadIcon from '@mui/icons-material/Download';
 import { useQuery } from '@tanstack/react-query';
 import { handleError } from '@shared/utils/notifyUtil';
-import { ELEVEN_LABS_MODELS, DEFAULT_ELEVEN_LABS_MODEL } from './elevenLabsModels';
+
+function InstructionsBox() {
+    return (
+        <Box mb={2}>
+            <Typography variant='body1'>
+                יש להזין מערך JSON של מקטעים, כאשר כל מקטע מייצג קטע דיבור אחד ומכיל שני שדות:
+                <code>character</code> - מי "אומר" את המקטע (<code>narrator</code> עבור קריינות, או שם הדמות עבור דיאלוג), ו-<code>text</code> - הטקסט המדויק שיוקרא.
+                <br /><br />
+                סדר המקטעים במערך הוא סדר ההקראה בפועל, ולכל דמות יש להשתמש בשם עקבי לאורך כל הסיפור. ניתן לפצל טקסט קריינות ארוך למספר מקטעים בכל מעבר בין דמויות.
+                <br /><br />
+                כדי להנחות טון או הגשה מיוחדת (לדוגמה לחישה או התרגשות), אפשר לשלב בתוך <code>text</code> תגית קצרה בסוגריים מרובעים במקום הרצוי, כמו <code>[בלחישה]</code>. מומלץ להשתמש בכך רק כשבאמת נדרש.
+                <br /><br />
+                דוגמה למבנה הנדרש:
+                <pre dir='ltr'>
+{`[
+  { "character": "narrator", "text": "..." },
+  { "character": "narrator", "text": "[בלחישה] קולות עמומים נשמעו מעבר לדלת." },
+  { "character": "שם הדמות", "text": "עצרו! אני שומע צעדים מתקרבים." }
+]`}
+                </pre>
+            </Typography>
+        </Box>
+    );
+}
 
 function useVoiceChoices() {
     return useQuery({
@@ -47,7 +70,7 @@ function JsonInputStage({ jsonText, onParse, parseError }) {
                 multiline
                 minRows={8}
                 fullWidth
-                placeholder='[{"segment_id": 1, "character": "narrator", "text": "..."}]'
+                placeholder='[{"character": "narrator", "text": "..."}]'
                 sx={{ mb: 1, direction: 'ltr' }}
             />
             <Button startIcon={<UploadFileIcon />} component="label" size="small">
@@ -71,7 +94,6 @@ function GenerateForm({ segments, characters, onSubmit, generating }) {
 
     const defaultValues = useMemo(() => ({
         name: '',
-        modelId: DEFAULT_ELEVEN_LABS_MODEL,
         characterVoices: Object.fromEntries(characters.map(c => [c, ''])),
     }), [characters]);
 
@@ -84,14 +106,6 @@ function GenerateForm({ segments, characters, onSubmit, generating }) {
             </Stack>
 
             <TextInput source="name" label="שם ההקראה" validate={required()} fullWidth />
-
-            <SelectInput
-                source="modelId"
-                label="מודל ElevenLabs"
-                choices={ELEVEN_LABS_MODELS}
-                validate={required()}
-                fullWidth
-            />
 
             <Typography variant="subtitle2" gutterBottom>בחירת קול לכל דמות</Typography>
             {characters.map(character => (
@@ -171,12 +185,12 @@ export default function StoryVoiceGenerator() {
         }
     }
 
-    async function handleGenerate({ name, modelId, characterVoices }) {
+    async function handleGenerate({ name, characterVoices }) {
         setGenerating(true);
         setResult(null);
         try {
             const { data: created } = await dataProvider.create('story_voice', {
-                data: { name, segments, characterVoices, modelId },
+                data: { name, segments, characterVoices },
             });
             // dataProvider.create() only echoes back the request body + id, not the
             // server-computed status/filePath/errorMessage - re-fetch the real record.
@@ -210,6 +224,8 @@ export default function StoryVoiceGenerator() {
             <Card sx={{ maxWidth: 720, mx: 'auto', mt: 2, p: 2 }}>
                 <CardContent>
                     <Typography variant="h5" gutterBottom>יצירת הקראה קולית (ElevenLabs)</Typography>
+
+                    <InstructionsBox />
 
                     <JsonInputStage jsonText={jsonText} onParse={handleParse} parseError={parseError} />
 

@@ -39,8 +39,7 @@ export class StoryVoice implements IHasUserId {
   @Column('simple-json')
   characterVoices: any;
 
-  @IsNotEmpty({ groups: [CrudValidationGroups.CREATE] })
-  @IsOptional({ groups: [CrudValidationGroups.UPDATE] })
+  @IsOptional({ always: true })
   @StringType
   @MaxLength(100, { always: true })
   @Column({ length: 100 })
