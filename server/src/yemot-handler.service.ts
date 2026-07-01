@@ -10,7 +10,7 @@ export class YemotHandlerService extends BaseYemotHandlerService {
     await this.getUserByDidPhone();
     if (!this.user) return;
 
-    await this.sendMessage('ברוכים הבאים למשחק ההרפתקה. הקש 1 להרפתקה, הקש 2 לקרב');
+    await this.sendMessage('ברוכים הבאים למשחק ההרפתקה. הקש אחת להרפתקה, הקש שתיים לקרב');
 
     const choice = await this.askForInput('בחר אפשרות', {
       min_digits: 1,
