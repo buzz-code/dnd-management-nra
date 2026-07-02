@@ -15,6 +15,7 @@ import { Dashboard, Layout } from 'src/GeneralLayout';
 import { resourceEntityGuesser } from '@shared/components/crudContainers/EntityGuesser';
 
 import game from 'src/entities/game';
+import character from 'src/entities/character';
 import segment from 'src/entities/segment';
 import layer from 'src/entities/layer';
 import gameNode from 'src/entities/game-node';
@@ -33,6 +34,7 @@ import AltRouteIcon from '@mui/icons-material/AltRoute';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import GraphicEqIcon from '@mui/icons-material/GraphicEq';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
+import TheaterComedyIcon from '@mui/icons-material/TheaterComedy';
 
 const themeOptions = { primary: teal[700], secondary: orange[600] };
 
@@ -47,6 +49,7 @@ const App = () => (
         {(permissions) => (
             <>
                 <Resource name="game" {...game} options={{ menuGroup: 'content' }} icon={SportsEsportsIcon} />
+                <Resource name="character" {...character} options={{ menuGroup: 'content' }} icon={TheaterComedyIcon} />
                 <Resource name="segment" {...segment} options={{ menuGroup: 'content' }} icon={VolumeUpIcon} />
                 <Resource name="layer" {...layer} options={{ menuGroup: 'structure' }} icon={LayersIcon} />
                 <Resource name="game_node" {...gameNode} options={{ menuGroup: 'structure' }} icon={AccountTreeIcon} />
