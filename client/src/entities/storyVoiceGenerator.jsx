@@ -153,6 +153,7 @@ function GenerateForm({
                                 size="small"
                                 disabled={!voiceId || savingCharacter === character}
                                 title={matched ? 'עדכן דמות במשחק' : 'שמור כדמות במשחק'}
+                                aria-label={matched ? 'עדכן דמות במשחק' : 'שמור כדמות במשחק'}
                                 onClick={() => onSaveCharacter(character, voiceId, matched?.id)}
                             >
                                 {matched ? <SyncIcon fontSize="small" /> : <SaveIcon fontSize="small" />}

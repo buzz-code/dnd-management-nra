@@ -15,6 +15,7 @@ export class AddCharactersTable1782934552122 implements MigrationInterface {
                 \`updatedAt\` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
                 INDEX \`characters_user_id_idx\` (\`user_id\`),
                 INDEX \`characters_game_id_idx\` (\`gameId\`),
+                UNIQUE INDEX \`characters_game_id_name_idx\` (\`gameId\`, \`name\`),
                 PRIMARY KEY (\`id\`)
             ) ENGINE = InnoDB
         `);

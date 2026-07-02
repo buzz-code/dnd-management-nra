@@ -18,7 +18,7 @@ export function useElevenLabsVoices() {
 }
 
 export function VoiceInput({ source, label, validate, renderExtra }) {
-    const { field } = useInput({ source, validate });
+    const { field, fieldState } = useInput({ source, validate });
     const { data: voices = [], isLoading } = useElevenLabsVoices();
     const selected = voices.find(v => v.id === field.value) || null;
 
@@ -33,7 +33,14 @@ export function VoiceInput({ source, label, validate, renderExtra }) {
                     isOptionEqualToValue={(o, v) => o.id === v.id}
                     value={selected}
                     onChange={(_, val) => field.onChange(val ? val.id : null)}
-                    renderInput={params => <MuiTextField {...params} label={label} />}
+                    renderInput={params => (
+                        <MuiTextField
+                            {...params}
+                            label={label}
+                            error={!!fieldState.error}
+                            helperText={fieldState.error?.message}
+                        />
+                    )}
                 />
                 {renderExtra && renderExtra(field.value)}
             </Box>

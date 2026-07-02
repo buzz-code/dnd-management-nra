@@ -11,6 +11,7 @@ import { Game } from './Game.entity';
 @Entity('characters')
 @Index('characters_user_id_idx', ['userId'], {})
 @Index('characters_game_id_idx', ['gameId'], {})
+@Index('characters_game_id_name_idx', ['gameId', 'name'], { unique: true })
 export class Character implements IHasUserId {
   @PrimaryGeneratedColumn()
   id: number;
@@ -23,7 +24,7 @@ export class Character implements IHasUserId {
   @Column('int')
   gameId: number;
 
-  @ManyToOne(() => Game)
+  @ManyToOne(() => Game, { nullable: false })
   @JoinColumn({ name: 'gameId' })
   game: Game;
 
