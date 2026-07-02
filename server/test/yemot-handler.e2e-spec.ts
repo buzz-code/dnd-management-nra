@@ -32,9 +32,7 @@ function newParams(overrides: Record<string, string> = {}) {
   };
 }
 
-// Skipped: processCall's game-tree flow is temporarily disabled in favor of a
-// hardcoded flow (see src/yemot-handler.service.ts). Re-enable once restored.
-describe.skip('YemotHandlerService (e2e)', () => {
+describe('YemotHandlerService (e2e)', () => {
   let app: INestApplication;
   let ds: DataSource;
 
